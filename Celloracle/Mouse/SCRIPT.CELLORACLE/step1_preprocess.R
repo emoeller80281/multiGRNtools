@@ -1,6 +1,8 @@
 library(cicero)
-library(monocle3)
+library(monocle)
+library(Biobase)
 library(Matrix)
+library(irlba)
 
 ## ── Parse arguments ───────────────────────────────────────────
 args <- commandArgs(trailingOnly = TRUE)
@@ -35,20 +37,22 @@ peakinfo   <- cbind(
   peakinfo
 )
 names(peakinfo)[1:3] <- c("chr", "bp1", "bp2")
+peakinfo$gene_short_name <- peakinfo$site_name
 row.names(peakinfo) <- peakinfo$site_name
 head(peakinfo)
 
 ## ── Build CDS ─────────────────────────────────────────────────
 sparse_matrix <- as(as.matrix(indata), "dgCMatrix")
 
-input_cds <- new_cell_data_set(
-  expression_data = sparse_matrix,
-  cell_metadata   = cellinfo,
-  gene_metadata   = peakinfo
+input_cds <- newCellDataSet(
+  cellData = sparse_matrix,
+  phenoData = new("AnnotatedDataFrame", data = cellinfo),
+  featureData = new("AnnotatedDataFrame", data = peakinfo),
+  expressionFamily = VGAM::negbinomial.size()
 )
 
 ## ── QC filtering ──────────────────────────────────────────────
-input_cds <- detect_genes(input_cds)
+input_cds <- detectGenes(input_cds)
 input_cds <- input_cds[Matrix::rowSums(exprs(input_cds)) != 0, ]
 
 max_count <- 50000
@@ -58,17 +62,18 @@ input_cds <- input_cds[, Matrix::colSums(exprs(input_cds)) <= max_count]
 
 ## ── Preprocessing & dimensional reduction ────────────────────
 set.seed(2017)
-input_cds <- detect_genes(input_cds)
-input_cds <- estimate_size_factors(input_cds)
-input_cds <- preprocess_cds(input_cds, method = "LSI")
-input_cds <- reduce_dimension(input_cds,
-                              reduction_method  = "UMAP",
-                              preprocess_method = "LSI")
+input_cds <- detectGenes(input_cds)
+input_cds <- estimateSizeFactors(input_cds)
 
-umap_coords <- reducedDims(input_cds)$UMAP
+## Cicero requires a reduced coordinate matrix whose rownames are cell IDs.
+cell_by_peak <- Matrix::t(exprs(input_cds))
+svd_out <- irlba(cell_by_peak, nv = 2)
+reduced_coords <- svd_out$u %*% diag(svd_out$d)
+rownames(reduced_coords) <- rownames(cell_by_peak)
+colnames(reduced_coords) <- c("Dim1", "Dim2")
 
 ## ── Build Cicero CDS ──────────────────────────────────────────
-cicero_cds <- make_cicero_cds(input_cds, reduced_coordinates = umap_coords)
+cicero_cds <- make_cicero_cds(input_cds, reduced_coordinates = reduced_coords)
 
 ## Save Cicero CDS object
 cicero_cds_file <- paste0(output_file, "_cicero_cds.Rds")

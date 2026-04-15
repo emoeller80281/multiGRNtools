@@ -2,7 +2,7 @@
 ##  step3_TSS_annot.py
 ##  Usage:
 ##    python step3_TSS_annot.py <all_peaks_csv> <cicero_connections_csv> \
-##                              <ref_genome> <out_prefix>
+##                              <ref_genome> <out_prefix> [genomes_dir]
 ##
 ##  Arguments:
 ##    all_peaks_csv          : path to _all_peaks.csv from step1
@@ -13,6 +13,8 @@
 ##                               <out_prefix>.test1.celloracle.tfinfo
 ##                               <out_prefix>_base_GRN.parquet
 ##                               <out_prefix>_base_GRN.csv
+##    genomes_dir            : optional genomepy base directory that contains
+##                             <genome_name>/ (e.g. .../reference_genome)
 ## ============================================================
 
 import pandas as pd
@@ -35,18 +37,23 @@ plt.rcParams["savefig.dpi"] = 300
 if len(sys.argv) < 5:
     sys.exit(
         "Usage: python step3_TSS_annot.py "
-        "<all_peaks_csv> <cicero_connections_csv> <ref_genome> <out_prefix>"
+        "<all_peaks_csv> <cicero_connections_csv> <ref_genome> <out_prefix> [genomes_dir]"
     )
 
 arg1        = sys.argv[1]   # all_peaks CSV
 arg2        = sys.argv[2]   # cicero connections CSV
 ref_genome  = sys.argv[3]   # e.g. "hg38" or "mm10"
 out_prefix  = sys.argv[4]   # clean output prefix, e.g. .../out_dir/atac
+genomes_dir = sys.argv[5] if len(sys.argv) >= 6 else None
+
+if genomes_dir is not None and genomes_dir.strip() == "":
+    genomes_dir = None
 
 print(f"all_peaks CSV          : {arg1}")
 print(f"cicero connections CSV : {arg2}")
 print(f"Reference genome       : {ref_genome}")
 print(f"Output prefix          : {out_prefix}")
+print(f"Genomes dir            : {genomes_dir}")
 
 ## ── Load peak list ────────────────────────────────────────────
 peaks = pd.read_csv(arg1)
@@ -76,18 +83,18 @@ print("Filtered peaks shape:", peaks.shape)
 print(peaks.head())
 
 ## ── Verify genome installation ────────────────────────────────
-genome_installation = ma.is_genome_installed(ref_genome=ref_genome, genomes_dir=None)
+genome_installation = ma.is_genome_installed(ref_genome=ref_genome, genomes_dir=genomes_dir)
 print(f"{ref_genome} installation: {genome_installation}")
 
 ## ── Check peak format ─────────────────────────────────────────
-peaks = ma.check_peak_format(peaks, ref_genome, genomes_dir=None)
+peaks = ma.check_peak_format(peaks, ref_genome, genomes_dir=genomes_dir)
 
 ## ── Motif scanning ────────────────────────────────────────────
 # Instantiate TFinfo object
 tfi = ma.TFinfo(
     peak_data_frame = peaks,
     ref_genome      = ref_genome,
-    genomes_dir     = None
+    genomes_dir     = genomes_dir
 )
 
 # Scan motifs — may take several hours on large datasets
