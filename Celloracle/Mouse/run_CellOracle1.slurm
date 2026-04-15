@@ -2,7 +2,7 @@
 #SBATCH --job-name=CellOracle
 #SBATCH --output=/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/LOGS/CellOracle/CellOracle_%A.txt
 #SBATCH --error=/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/LOGS/CellOracle/CellOracle_%A.err
-#SBATCH --time=15:00:00
+#SBATCH --time=08:00:00
 #SBATCH -p memory
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=16
@@ -187,13 +187,13 @@ run_condition() {
     echo "  Start      : $(date)"
 
     ## [1/4] Preprocess ATAC → all_peaks.csv + cicero_connections.csv
-    # echo ""
-    # echo "  [1/4] step1_preprocess.R ..."
-    # /usr/bin/time -v Rscript "${SCRIPT_DIR}/step1_preprocess.R" \
-    #   "$atac_file" \
-    #   "$out_atac_prefix" \
-    #   "$CHROM_SIZES" \
-    #   || { echo "  FAILED at step1_preprocess.R"; exit 1; }
+    echo ""
+    echo "  [1/4] step1_preprocess.R ..."
+    /usr/bin/time -v Rscript "${SCRIPT_DIR}/step1_preprocess.R" \
+      "$atac_file" \
+      "$out_atac_prefix" \
+      "$CHROM_SIZES" \
+      || { echo "  FAILED at step1_preprocess.R"; exit 1; }
 
     ## [2/4] TSS annotation + motif scanning → base GRN parquet
     echo ""
@@ -227,9 +227,15 @@ run_condition() {
     echo ""
     echo "  Done: $(date)"
 
-  } > "$out_dir/run.log" 2>&1 \
+    echo ""
+    echo "Formatting GRN..."
+    /usr/bin/time -v "$PYTHON_BIN" "${SCRIPT_DIR}/format_celloracle_grn.py" \
+      "$out_dir/output_GRN/celloracle_network_${SAMPLE}_final_GRN.csv" \
+      "$out_dir/output_GRN/celloracle_${CELL_TYPE}_${SAMPLE}.tsv"
+
+  } > "$LOG_DIR/run.log" 2>&1 \
     && echo "  Done" \
-    || echo "  FAILED : see $out_dir/run.log"
+    || echo "  FAILED : see $LOG_DIR/run.log"
 }
 
 run_condition \

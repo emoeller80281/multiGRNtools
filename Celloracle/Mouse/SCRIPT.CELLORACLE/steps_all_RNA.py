@@ -71,10 +71,11 @@ adata.X = adata.X.astype('float64')
 sc.pp.normalize_per_cell(adata, key_n_counts='n_counts_all')
 
 ## ── Highly variable gene selection ───────────────────────────
+num_genes = adata.n_vars
 filter_result = sc.pp.filter_genes_dispersion(
     adata.X,
     flavor      = 'cell_ranger',
-    n_top_genes = num_genes,   # now correctly == number of genes
+    n_top_genes = num_genes,
     log         = False
 )
 

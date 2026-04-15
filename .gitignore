@@ -5,3 +5,4 @@ LOGS/*
 .RData
 .Rhistory
 .rds
+.out
