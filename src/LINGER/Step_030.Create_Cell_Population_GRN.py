@@ -1,5 +1,6 @@
 import scanpy as sc
 
+import os
 import sys
 import argparse
 import logging
@@ -7,7 +8,7 @@ import logging
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 
-sys.path.insert(0, '/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/LINGER')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 parser = argparse.ArgumentParser(description="Generate cell population GRN.")
 
@@ -17,15 +18,16 @@ parser.add_argument("--method", required=True, help="Training method")
 parser.add_argument("--sample_data_dir", required=True, help="Directory containing LINGER intermediate files")
 parser.add_argument("--activef", required=True, help="activation function to use for training")
 parser.add_argument("--organism", required=True, help='Enter "mouse" or "human"')
+parser.add_argument("--num_cpu", required=True, help='Number of cpus allocated for the job')
 
 args = parser.parse_args()
 
 output_dir = args.sample_data_dir + "/"
 
-if args.method.lower() == "scnn":
-  import linger_1_92.LL_net as LL_net
-elif args.method.lower() == "linger":
-  import linger.LL_net as LL_net
+# if args.method.lower() == "scnn":
+import linger_1_92.LL_net as LL_net
+# elif args.method.lower() == "linger":
+#   import linger.LL_net as LL_net
 
 # Load in the adata_RNA and adata_ATAC files
 logging.info(f'Reading in the RNAseq and ATACseq h5ad adata')
@@ -41,7 +43,8 @@ LL_net.TF_RE_binding(
   adata_ATAC,
   args.genome,
   args.method,
-  output_dir
+  output_dir,
+  num_cpu=args.num_cpu
   )
 
 # Calculate the cis-regulatory scores
@@ -53,7 +56,8 @@ LL_net.cis_reg(
   adata_ATAC,
   args.genome,
   args.method,
-  output_dir
+  output_dir,
+  num_cpu=args.num_cpu
   )
 
 # Calculate the trans-regulatory scores
@@ -63,5 +67,6 @@ LL_net.trans_reg(
   args.sample_data_dir,
   args.method,
   output_dir,
-  args.genome
+  args.genome,
+  num_cpu=args.num_cpu
   )

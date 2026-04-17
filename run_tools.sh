@@ -89,6 +89,7 @@ if [ "$RUN_CELLORACLE" = true ]; then
         --output=${log_dir}/CellOracle.log \
         --error=${log_dir}/CellOracle.err \
         "${PROJECT_DIR}/src/Celloracle/run_CellOracle.sh"
+fi
 
 if [ "$RUN_LINGER" = true ]; then
     echo "Submitting LINGER job for ${CELL_TYPE} - ${SAMPLE_NAME} (Task ID: ${ARRAY_TASK_ID})"
@@ -102,3 +103,4 @@ if [ "$RUN_LINGER" = true ]; then
         --output=${log_dir}/LINGER.log \
         --error=${log_dir}/LINGER.err \
         "${PROJECT_DIR}/src/LINGER/run_linger.sh"
+fi

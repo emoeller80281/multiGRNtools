@@ -8,6 +8,7 @@ import torch
 import csv
 import torch.nn as nn
 from torch.nn import functional as F
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 #load data
 import os
@@ -342,9 +343,15 @@ def load_data_scNN(GRNdir,data_dir,genome, output_dir):
     RE_TGlink=RE_TGlink.loc[geneoverlap]
     RE_TGlink=RE_TGlink.reset_index(drop=True)
     return Exp,Opn,Target,RE_TGlink  
+
+def process_chr_scnn(chrtemp, outdir, RE_TGlink, TFName, geneName, REName):
+    RE_TGlink1 = RE_TGlink[RE_TGlink['chr'] == chrtemp]
+    net_all = torch.load(os.path.join(outdir, f'{chrtemp}_net.pt'))
+    result = TF_RE_scNN(TFName, geneName, net_all, RE_TGlink1, REName)
+    result.to_csv(os.path.join(outdir, f'{chrtemp}_cell_population_TF_RE_binding.txt'), sep='\t')
+    return result
     
-    
-def TF_RE_binding(GRNdir,data_dir,adata_RNA,adata_ATAC,genome,method,outdir):
+def TF_RE_binding(GRNdir,data_dir,adata_RNA,adata_ATAC,genome,method,outdir,num_cpu):
     logging.info('Generating cellular population TF binding strength ...')
     chrom = ['chr'+str(i+1) for i in range(22)]
     chrom.append('chrX')
@@ -374,20 +381,30 @@ def TF_RE_binding(GRNdir,data_dir,adata_RNA,adata_ATAC,genome,method,outdir):
         Exp,Opn,Target,RE_TGlink=load_data_scNN(GRNdir,data_dir,genome,outdir)
         RE_TGlink=pd.read_csv(os.path.join(outdir, 'RE_TGlink.txt'),sep='\t',header=0)
         RE_TGlink.columns=[0,1,'chr']
-        #chrall=[RE_TGlink[0][i][0].split(':')[0] for i in range(RE_TGlink.shape[0])]
         chrlist=RE_TGlink['chr'].unique()
         REName=Opn.index
         geneName=Target.index
         TFName=Exp.index
-        result_all=pd.DataFrame([])
-        for jj in tqdm(range(0,len(chrlist))):
-            chrtemp=chrlist[jj]
-            RE_TGlink1=RE_TGlink[RE_TGlink['chr']==chrtemp]
-            net_all=torch.load(os.path.join(outdir, f'{chrtemp}_net.pt'))
-            result=TF_RE_scNN(TFName,geneName,net_all,RE_TGlink1,REName)
-            result.to_csv(os.path.join(outdir, f'{chrtemp}_cell_population_TF_RE_binding.txt'),sep='\t')
-            result_all=pd.concat([result_all,result],axis=0)
-        result=result_all.copy()
+        
+        # Process chromosomes in parallel
+        results_list = []
+        max_workers = min(len(chrlist), len(num_cpu))
+        
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            future_to_chr = {
+                executor.submit(process_chr_scnn, chrtemp, outdir, RE_TGlink, TFName, geneName, REName): chrtemp
+                for chrtemp in chrlist
+            }
+            
+            for future in as_completed(future_to_chr):
+                chrtemp = future_to_chr[future]
+                try:
+                    result = future.result()
+                    results_list.append(result)
+                except Exception as exc:
+                    logging.error(f'Chromosome {chrtemp} failed: {exc}')
+        
+        result = pd.concat(results_list, axis=0) if results_list else pd.DataFrame([])
     result.to_csv(os.path.join(outdir, 'cell_population_TF_RE_binding.txt'),sep='\t')   
         
 def load_TFbinding_scNN(GRNdir,outdir,genome):
@@ -850,7 +867,7 @@ def cis_shap_scNN(chrtemp,outdir,RE_TGlink1,REName,TFName):
     return RE_TG
 
 
-def cis_reg(GRNdir,data_dir,adata_RNA,adata_ATAC,genome,method,outdir): 
+def cis_reg(GRNdir,data_dir,adata_RNA,adata_ATAC,genome,method,outdir,num_cpu): 
     chrom=['chr'+str(i+1) for i in range(22)]
     chrom.append('chrX')
     if method=='baseline':
@@ -870,17 +887,33 @@ def cis_reg(GRNdir,data_dir,adata_RNA,adata_ATAC,genome,method,outdir):
         Exp,Opn,Target,RE_TGlink=load_data_scNN(GRNdir,data_dir,genome,outdir)
         RE_TGlink=pd.read_csv(os.path.join(outdir, 'RE_TGlink.txt'),sep='\t',header=0)
         RE_TGlink.columns=[0,1,'chr']
-        #chrall=[RE_TGlink[0][i][0].split(':')[0] for i in range(RE_TGlink.shape[0])]
         chrlist=RE_TGlink['chr'].unique()
         REName=Opn.index
         geneName=Target.index
         TFName=Exp.index
-        result=pd.DataFrame([])
-        for i in tqdm(range(len(chrlist))):
-            chrN=chrlist[i]
-            RE_TGlink1=RE_TGlink[RE_TGlink['chr']==chrN]
-            temp=cis_shap_scNN(chrN,outdir,RE_TGlink1,REName,TFName)
-            result=pd.concat([result,temp],axis=0,join='outer')
+        
+        # Process chromosomes in parallel
+        results_list = []
+        max_workers = min(len(chrlist), int(num_cpu))  # Limit to 8 workers (adjust based on your system)
+        
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all tasks
+            future_to_chr = {
+                executor.submit(cis_shap_scNN, chrN, outdir, RE_TGlink[RE_TGlink['chr']==chrN], REName, TFName): chrN
+                for chrN in chrlist
+            }
+            
+            # Collect results as they complete
+            for future in as_completed(future_to_chr):
+                chrN = future_to_chr[future]
+                try:
+                    temp = future.result()
+                    results_list.append(temp)
+                except Exception as exc:
+                    logging.error(f'Chromosome {chrN} failed: {exc}')
+        
+        result = pd.concat(results_list, axis=0, join='outer') if results_list else pd.DataFrame([])
+    
     result.to_csv(os.path.join(outdir, 'cell_population_cis_regulatory.txt'),sep='\t',header=None,index=None)
 
 
@@ -1081,7 +1114,7 @@ def load_TF_TG( GRNdir, TFset,TGset):
     TF_TG_all=pd.DataFrame(TF_TG_all,index=TGset,columns=TFset)
     return TF_TG_all
 
-def trans_reg(GRNdir,data_dir,method,outdir,genome):
+def trans_reg(GRNdir,data_dir,method,outdir,genome,num_cpu):
     logging.info('Generate trans-regulatory netowrk ...')
     if method=='baseline':
         Binding=pd.read_csv(os.path.join(outdir, 'cell_population_TF_RE_binding.txt'),sep='\t',index_col=0)
@@ -1103,18 +1136,32 @@ def trans_reg(GRNdir,data_dir,method,outdir,genome):
         Exp,Opn,Target,RE_TGlink=load_data_scNN(GRNdir,data_dir,genome,outdir)
         RE_TGlink=pd.read_csv(os.path.join(outdir, 'RE_TGlink.txt'),sep='\t',header=0)
         RE_TGlink.columns=[0,1,'chr']
-        #chrall=[RE_TGlink[0][i][0].split(':')[0] for i in range(RE_TGlink.shape[0])]
         chrlist=RE_TGlink['chr'].unique()
         REName=Opn.index
         geneName=Target.index
         TFName=Exp.index
-        result=pd.DataFrame([])
-        S=pd.DataFrame([])
-        for i in tqdm(range(len(chrlist))):
-            chrN=chrlist[i]
-            RE_TGlink1=RE_TGlink[RE_TGlink['chr']==chrN]
-            temp=trans_shap_scNN(chrN,outdir,RE_TGlink1,REName,TFName)
-            S=pd.concat([S,temp],axis=0,join='outer')
+        
+        # Process chromosomes in parallel
+        results_list = []
+        max_workers = min(len(chrlist), int(num_cpu))  # Limit to 8 workers (adjust based on your system)
+        
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all tasks
+            future_to_chr = {
+                executor.submit(trans_shap_scNN, chrN, outdir, RE_TGlink[RE_TGlink['chr']==chrN], REName, TFName): chrN
+                for chrN in chrlist
+            }
+            
+            # Collect results as they complete
+            for future in as_completed(future_to_chr):
+                chrN = future_to_chr[future]
+                try:
+                    temp = future.result()
+                    results_list.append(temp)
+                except Exception as exc:
+                    logging.error(f'Chromosome {chrN} failed: {exc}')
+        
+        S = pd.concat(results_list, axis=0, join='outer') if results_list else pd.DataFrame([])
     logging.info('Save trans-regulatory netowrk ...')
     S.to_csv(os.path.join(outdir, 'cell_population_trans_regulatory.txt'),sep='\t')
 

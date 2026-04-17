@@ -2,8 +2,8 @@
 
 #SBATCH -p compute
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=64
-#SBATCH --mem-per-cpu=3G
+#SBATCH --cpus-per-task=23
+#SBATCH --mem-per-cpu=16G
 
 set -euo pipefail
 
@@ -18,7 +18,7 @@ METHOD="scNN"
 
 ACTIVEF='ReLU'
 
-BASE_DIR="${PROJECT_DIR}/LINGER"
+BASE_DIR="${PROJECT_DIR}/src/LINGER"
 LINGER_RESULTS_DIR="${RESULTS_DIR}/LINGER"
 TSS_MOTIF_INFO_PATH="${DATA_DIR}/LINGER_OTHER_SPECIES_TF_MOTIF_DATA/provide_data/"
 
@@ -279,13 +279,13 @@ run_pipeline() {
     #     --genome "$GENOME" \
     #     --method "$METHOD"
 
-    run_step "Step_020.Linger_Training" "${BASE_DIR}/Step_020.Linger_Training.py" \
-        --tss_motif_info_path "$TSS_MOTIF_INFO_PATH" \
-        --genome "$GENOME" \
-        --method "$METHOD" \
-        --sample_data_dir "$LINGER_RESULTS_DIR" \
-        --activef "$ACTIVEF" \
-        --organism "$SPECIES" 
+    # run_step "Step_020.Linger_Training" "${BASE_DIR}/Step_020.Linger_Training.py" \
+    #     --tss_motif_info_path "$TSS_MOTIF_INFO_PATH" \
+    #     --genome "$GENOME" \
+    #     --method "$METHOD" \
+    #     --sample_data_dir "$LINGER_RESULTS_DIR" \
+    #     --activef "$ACTIVEF" \
+    #     --organism "$SPECIES" 
 
     run_step "Step_030.Create_Cell_Population_GRN" "${BASE_DIR}/Step_030.Create_Cell_Population_GRN.py" \
         --tss_motif_info_path "$TSS_MOTIF_INFO_PATH" \
@@ -293,7 +293,9 @@ run_pipeline() {
         --method "$METHOD" \
         --sample_data_dir "$LINGER_RESULTS_DIR" \
         --activef "$ACTIVEF" \
-        --organism "$SPECIES" 
+        --organism "$SPECIES" \
+        --num_cpu "$NUM_CPU"
+
 
     run_step "Step_040.Homer_Motif_Finding" "${BASE_DIR}/Step_040.Homer_Motif_Finding.py" \
         --tss_motif_info_path "$TSS_MOTIF_INFO_PATH" \

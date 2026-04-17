@@ -48,7 +48,7 @@ else
 fi
 
 ## ── Base paths ────────────────────────────────────────────────
-BASE_DIR="${PROJECT_DIR}/Celloracle"
+BASE_DIR="${PROJECT_DIR}/src/Celloracle"
 SCRIPT_DIR=$BASE_DIR
 CELL_ORACLE_RESULTS_DIR="${RESULTS_DIR}/${CELL_TYPE}/${SAMPLE_NAME}/CellOracle"
 LOG_DIR="${PROJECT_DIR}/LOGS/CellOracle/${CELL_TYPE}/${SAMPLE_NAME}"

@@ -1,3 +1,5 @@
+
+import os
 import scanpy as sc
 import subprocess
 import pandas as pd
@@ -9,7 +11,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 # Import the project directory to load the linger module
-sys.path.insert(0, '/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/LINGER')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 parser = argparse.ArgumentParser(description="Train the scNN neural network model.")
 
