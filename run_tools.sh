@@ -13,11 +13,15 @@ PROJECT_DIR="/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/mult
 RAW_DATA_DIR="/gpfs/Labs/Uzun/DATA/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/MUON_FILTERED_COUNT_DATASETS"
 DATA_DIR="/gpfs/Labs/Uzun/DATA/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/data"
 RESULTS_DIR="/gpfs/Labs/Uzun/RESULTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools"
+REFERENCE_GENOME_DIR="/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.SINGLE_CELL_GRN_INFERENCE.MOELLER/data/genome_data/reference_genome"
 GRN_DIR="${PROJECT_DIR}/formatted_GRNs"
 
 mkdir -p "${RESULTS_DIR}"
 mkdir -p "${GRN_DIR}"
 mkdir -p "${DATA_DIR}"
+
+RUN_CELLORACLE=false
+RUN_LINGER=true
 
 EXPERIMENT_LIST=(
     # "mESC|E7.5_rep1|mouse|mESC"
@@ -56,23 +60,31 @@ ARRAY_TASK_ID="${SLURM_ARRAY_TASK_ID:-0}"
 rna_file="${RAW_DATA_DIR}/${RAW_CELL_TYPE}/${SAMPLE_NAME}/${SAMPLE_NAME}_RNA.csv"
 atac_file="${RAW_DATA_DIR}/${RAW_CELL_TYPE}/${SAMPLE_NAME}/${SAMPLE_NAME}_ATAC.csv"
 
-log_dir="${PROJECT_DIR}/LOGS/LINGER/${CELL_TYPE}/${SAMPLE_NAME}"
-mkdir -p "${log_dir}"
-
 sample_result_dir="${RESULTS_DIR}/${CELL_TYPE}/${SAMPLE_NAME}"
 mkdir -p "${sample_result_dir}"
 
-# Run CellOracle for each sample
-# sbatch \
-#     --export=PROJECT_DIR="$PROJECT_DIR",RAW_DATA_DIR="$RAW_DATA_DIR",RESULTS_DIR="$sample_result_dir",GRN_DIR="$GRN_DIR",CELL_TYPE="$CELL_TYPE",SAMPLE_NAME="$SAMPLE_NAME",SPECIES="$SPECIES",RNA_FILE="$rna_file",ATAC_FILE="$atac_file" \
-#     --job-name="SCMULTI_PREDICT_CELLORACLE_${CELL_TYPE}_${SAMPLE_NAME}" \
-#     --output=${PROJECT_DIR}/LOGS/CellOracle/${CELL_TYPE}/${SAMPLE_NAME}/CellOracle_${ARRAY_JOB_ID}_${ARRAY_TASK_ID}.log \
-#     --error=${PROJECT_DIR}/LOGS/CellOracle/${CELL_TYPE}/${SAMPLE_NAME}/CellOracle_${ARRAY_JOB_ID}_${ARRAY_TASK_ID}.err \
-#     "${PROJECT_DIR}/Celloracle/Mouse/run_CellOracle1.slurm"
+if [ "$RUN_CELLORACLE" = true ]; then
+    echo "Submitting CellOracle job for ${CELL_TYPE} - ${SAMPLE_NAME} (Task ID: ${ARRAY_TASK_ID})"
 
-sbatch \
-    --export=PROJECT_DIR="$PROJECT_DIR",DATA_DIR="$DATA_DIR",RAW_DATA_DIR="$RAW_DATA_DIR",RESULTS_DIR="$sample_result_dir",LOG_DIR="$log_dir",GRN_DIR="$GRN_DIR",CELL_TYPE="$CELL_TYPE",SAMPLE_NAME="$SAMPLE_NAME",SPECIES="$SPECIES",RNA_FILE="$rna_file",ATAC_FILE="$atac_file" \
-    --job-name="SCMULTI_PREDICT_LINGER_${CELL_TYPE}_${SAMPLE_NAME}" \
-    --output=${log_dir}/LINGER.log \
-    --error=${log_dir}/LINGER.err \
-    "${PROJECT_DIR}/LINGER/run_linger.sh"
+    log_dir="${PROJECT_DIR}/LOGS/CellOracle/${CELL_TYPE}/${SAMPLE_NAME}"
+    mkdir -p "${log_dir}"
+
+    sbatch \
+        --export=PROJECT_DIR="$PROJECT_DIR",RAW_DATA_DIR="$RAW_DATA_DIR",RESULTS_DIR="$sample_result_dir",REFERENCE_GENOME_DIR="$REFERENCE_GENOME_DIR",CELL_TYPE="$CELL_TYPE",SAMPLE_NAME="$SAMPLE_NAME",SPECIES="$SPECIES",RNA_FILE="$rna_file",ATAC_FILE="$atac_file" \
+        --job-name="SCMULTI_PREDICT_CELLORACLE_${CELL_TYPE}_${SAMPLE_NAME}" \
+        --output=${log_dir}/CellOracle.log \
+        --error=${log_dir}/CellOracle.err \
+        "${PROJECT_DIR}/src/Celloracle/run_CellOracle.sh"
+
+if [ "$RUN_LINGER" = true ]; then
+    echo "Submitting LINGER job for ${CELL_TYPE} - ${SAMPLE_NAME} (Task ID: ${ARRAY_TASK_ID})"
+
+    log_dir="${PROJECT_DIR}/LOGS/LINGER/${CELL_TYPE}/${SAMPLE_NAME}"
+    mkdir -p "${log_dir}"
+
+    sbatch \
+        --export=PROJECT_DIR="$PROJECT_DIR",DATA_DIR="$DATA_DIR",RAW_DATA_DIR="$RAW_DATA_DIR",RESULTS_DIR="$sample_result_dir",LOG_DIR="$log_dir",GRN_DIR="$GRN_DIR",CELL_TYPE="$CELL_TYPE",SAMPLE_NAME="$SAMPLE_NAME",SPECIES="$SPECIES",RNA_FILE="$rna_file",ATAC_FILE="$atac_file" \
+        --job-name="SCMULTI_PREDICT_LINGER_${CELL_TYPE}_${SAMPLE_NAME}" \
+        --output=${log_dir}/LINGER.log \
+        --error=${log_dir}/LINGER.err \
+        "${PROJECT_DIR}/src/LINGER/run_linger.sh"

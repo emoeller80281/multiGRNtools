@@ -49,19 +49,18 @@ fi
 
 ## ── Base paths ────────────────────────────────────────────────
 BASE_DIR="${PROJECT_DIR}/Celloracle"
+SCRIPT_DIR=$BASE_DIR
 CELL_ORACLE_RESULTS_DIR="${RESULTS_DIR}/${CELL_TYPE}/${SAMPLE_NAME}/CellOracle"
 LOG_DIR="${PROJECT_DIR}/LOGS/CellOracle/${CELL_TYPE}/${SAMPLE_NAME}"
-GENOMES_DIR="/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.SINGLE_CELL_GRN_INFERENCE.MOELLER/data/genome_data/reference_genome"
+
 mkdir -p "$LOG_DIR"
 
 ## ── Genome-specific settings ──────────────────────────────────
 if [[ "$GENOME" == "Human" ]]; then
-  SCRIPT_DIR="${PROJECT_DIR}/Celloracle/Mouse/SCRIPT.CELLORACLE"
   GENOME_REF="hg38"
   CHROM_SIZES="${SCRIPT_DIR}/hg38.fa.sizes"
 
 elif [[ "$GENOME" == "Mouse" ]]; then
-  SCRIPT_DIR="${PROJECT_DIR}/Celloracle/Mouse/SCRIPT.CELLORACLE"
   GENOME_REF="mm10"
   CHROM_SIZES="${SCRIPT_DIR}/mm10.chrom.sizes"
 
@@ -79,8 +78,8 @@ if [[ ! -f "$CHROM_SIZES" ]]; then
   echo "ERROR: Chromosome sizes file not found: $CHROM_SIZES"
   exit 1
 fi
-if [[ ! -d "$GENOMES_DIR/$GENOME_REF" ]]; then
-  echo "ERROR: Genome directory not found: $GENOMES_DIR/$GENOME_REF"
+if [[ ! -d "$REFERENCE_GENOME_DIR/$GENOME_REF" ]]; then
+  echo "ERROR: Genome directory not found: $REFERENCE_GENOME_DIR/$GENOME_REF"
   exit 1
 fi
 
@@ -89,11 +88,11 @@ fi
 GENOMEPY_DEFAULT_DIR="$HOME/.local/share/genomes"
 mkdir -p "$GENOMEPY_DEFAULT_DIR"
 
-if [[ -d "$GENOMES_DIR/hg38" ]]; then
-  ln -sfn "$GENOMES_DIR/hg38" "$GENOMEPY_DEFAULT_DIR/hg38"
+if [[ -d "$REFERENCE_GENOME_DIR/hg38" ]]; then
+  ln -sfn "$REFERENCE_GENOME_DIR/hg38" "$GENOMEPY_DEFAULT_DIR/hg38"
 fi
-if [[ -d "$GENOMES_DIR/mm10" ]]; then
-  ln -sfn "$GENOMES_DIR/mm10" "$GENOMEPY_DEFAULT_DIR/mm10"
+if [[ -d "$REFERENCE_GENOME_DIR/mm10" ]]; then
+  ln -sfn "$REFERENCE_GENOME_DIR/mm10" "$GENOMEPY_DEFAULT_DIR/mm10"
 fi
 
 if [[ ! -f "$GENOMEPY_DEFAULT_DIR/$GENOME_REF/$GENOME_REF.fa" && ! -f "$GENOMEPY_DEFAULT_DIR/$GENOME_REF/$GENOME_REF.fa.gz" ]]; then
@@ -129,7 +128,7 @@ echo "  Sample name  : $SAMPLE_NAME"
 echo "  Sample dir   : $SAMPLE_DIR"
 echo "  RNA_FILE     : $RNA_FILE"
 echo "  ATAC_FILE    : $ATAC_FILE"
-echo "  Genomes dir  : $GENOMES_DIR"
+echo "  Genomes dir  : $REFERENCE_GENOME_DIR"
 echo "  Genomepy dir : $GENOMEPY_DEFAULT_DIR"
 echo "  Results dir  : $CELL_ORACLE_RESULTS_DIR"
 echo "========================================"
@@ -188,45 +187,45 @@ run_condition() {
     echo "  Start      : $(date)"
 
     ## [1/4] Preprocess ATAC → all_peaks.csv + cicero_connections.csv
-    # echo ""
-    # echo "  [1/4] step1_preprocess.R ..."
-    # /usr/bin/time -v Rscript "${SCRIPT_DIR}/step1_preprocess.R" \
-    #   "$atac_file" \
-    #   "$out_atac_prefix" \
-    #   "$CHROM_SIZES" \
-    #   || { echo "  FAILED at step1_preprocess.R"; exit 1; }
+    echo ""
+    echo "  [1/4] step1_preprocess.R ..."
+    /usr/bin/time -v Rscript "${SCRIPT_DIR}/step1_preprocess.R" \
+      "$atac_file" \
+      "$out_atac_prefix" \
+      "$CHROM_SIZES" \
+      || { echo "  FAILED at step1_preprocess.R"; exit 1; }
 
     ## [2/4] TSS annotation + motif scanning → base GRN parquet
-    # echo ""
-    # echo "  [2/4] step3_TSS_annot.py ..."
-    # /usr/bin/time -v "$PYTHON_BIN" "${SCRIPT_DIR}/step3_TSS_annot.py" \
-    #   "$all_peak" \
-    #   "$cicero_connection" \
-    #   "$GENOME_REF" \
-    #   "$out_atac_prefix" \
-    #   "$GENOMES_DIR" \
-    #   || { echo "  FAILED at step3_TSS_annot.py"; exit 1; }
+    echo ""
+    echo "  [2/4] step3_TSS_annot.py ..."
+    /usr/bin/time -v "$PYTHON_BIN" "${SCRIPT_DIR}/step3_TSS_annot.py" \
+      "$all_peak" \
+      "$cicero_connection" \
+      "$GENOME_REF" \
+      "$out_atac_prefix" \
+      "$REFERENCE_GENOME_DIR" \
+      || { echo "  FAILED at step3_TSS_annot.py"; exit 1; }
 
     ## [3/4] Process RNA → processed .h5ad
-    # echo ""
-    # echo "  [3/4] steps_all_RNA.py ..."
-    # /usr/bin/time -v "$PYTHON_BIN" "${SCRIPT_DIR}/steps_all_RNA.py" \
-    #   "$rna_file" \
-    #   "$out_rna_prefix" \
-    #   "$cell_label" \
-    #   || { echo "  FAILED at steps_all_RNA.py"; exit 1; }
+    echo ""
+    echo "  [3/4] steps_all_RNA.py ..."
+    /usr/bin/time -v "$PYTHON_BIN" "${SCRIPT_DIR}/steps_all_RNA.py" \
+      "$rna_file" \
+      "$out_rna_prefix" \
+      "$cell_label" \
+      || { echo "  FAILED at steps_all_RNA.py"; exit 1; }
 
     ## [4/4] Integrate RNA + ATAC → GRN per cluster
-    # echo ""
-    # echo "  [4/4] step7_final_integration.py ..."
-    # /usr/bin/time -v "$PYTHON_BIN" "${SCRIPT_DIR}/step7_final_integration.py" \
-    #   "$int_rna_input" \
-    #   "$int_atac_input" \
-    #   "$out_dir" \
-    #   || { echo "  FAILED at step7_final_integration.py"; exit 1; }
+    echo ""
+    echo "  [4/4] step7_final_integration.py ..."
+    /usr/bin/time -v "$PYTHON_BIN" "${SCRIPT_DIR}/step7_final_integration.py" \
+      "$int_rna_input" \
+      "$int_atac_input" \
+      "$out_dir" \
+      || { echo "  FAILED at step7_final_integration.py"; exit 1; }
 
-    # echo ""
-    # echo "  Done: $(date)"
+    echo ""
+    echo "  Done: $(date)"
 
     echo ""
     echo "Formatting GRN..."
