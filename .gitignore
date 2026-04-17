@@ -6,3 +6,4 @@ LOGS/*
 .Rhistory
 .rds
 .out
+formatted_GRNs/*

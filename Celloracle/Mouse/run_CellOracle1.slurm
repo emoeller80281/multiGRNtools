@@ -156,7 +156,8 @@ run_condition() {
   local rna_file="$1"
   local atac_file="$2"
   local out_dir="$3"
-  local cell_label="${4:-$SAMPLE}"
+  local grn_dir="$4"
+  local cell_label="${5:-$SAMPLE}"
 
   echo ""
   echo "     RNA        : $rna_file"
@@ -187,51 +188,51 @@ run_condition() {
     echo "  Start      : $(date)"
 
     ## [1/4] Preprocess ATAC → all_peaks.csv + cicero_connections.csv
-    echo ""
-    echo "  [1/4] step1_preprocess.R ..."
-    /usr/bin/time -v Rscript "${SCRIPT_DIR}/step1_preprocess.R" \
-      "$atac_file" \
-      "$out_atac_prefix" \
-      "$CHROM_SIZES" \
-      || { echo "  FAILED at step1_preprocess.R"; exit 1; }
+    # echo ""
+    # echo "  [1/4] step1_preprocess.R ..."
+    # /usr/bin/time -v Rscript "${SCRIPT_DIR}/step1_preprocess.R" \
+    #   "$atac_file" \
+    #   "$out_atac_prefix" \
+    #   "$CHROM_SIZES" \
+    #   || { echo "  FAILED at step1_preprocess.R"; exit 1; }
 
     ## [2/4] TSS annotation + motif scanning → base GRN parquet
-    echo ""
-    echo "  [2/4] step3_TSS_annot.py ..."
-    /usr/bin/time -v "$PYTHON_BIN" "${SCRIPT_DIR}/step3_TSS_annot.py" \
-      "$all_peak" \
-      "$cicero_connection" \
-      "$GENOME_REF" \
-      "$out_atac_prefix" \
-      "$GENOMES_DIR" \
-      || { echo "  FAILED at step3_TSS_annot.py"; exit 1; }
+    # echo ""
+    # echo "  [2/4] step3_TSS_annot.py ..."
+    # /usr/bin/time -v "$PYTHON_BIN" "${SCRIPT_DIR}/step3_TSS_annot.py" \
+    #   "$all_peak" \
+    #   "$cicero_connection" \
+    #   "$GENOME_REF" \
+    #   "$out_atac_prefix" \
+    #   "$GENOMES_DIR" \
+    #   || { echo "  FAILED at step3_TSS_annot.py"; exit 1; }
 
     ## [3/4] Process RNA → processed .h5ad
-    echo ""
-    echo "  [3/4] steps_all_RNA.py ..."
-    /usr/bin/time -v "$PYTHON_BIN" "${SCRIPT_DIR}/steps_all_RNA.py" \
-      "$rna_file" \
-      "$out_rna_prefix" \
-      "$cell_label" \
-      || { echo "  FAILED at steps_all_RNA.py"; exit 1; }
+    # echo ""
+    # echo "  [3/4] steps_all_RNA.py ..."
+    # /usr/bin/time -v "$PYTHON_BIN" "${SCRIPT_DIR}/steps_all_RNA.py" \
+    #   "$rna_file" \
+    #   "$out_rna_prefix" \
+    #   "$cell_label" \
+    #   || { echo "  FAILED at steps_all_RNA.py"; exit 1; }
 
     ## [4/4] Integrate RNA + ATAC → GRN per cluster
-    echo ""
-    echo "  [4/4] step7_final_integration.py ..."
-    /usr/bin/time -v "$PYTHON_BIN" "${SCRIPT_DIR}/step7_final_integration.py" \
-      "$int_rna_input" \
-      "$int_atac_input" \
-      "$out_dir" \
-      || { echo "  FAILED at step7_final_integration.py"; exit 1; }
+    # echo ""
+    # echo "  [4/4] step7_final_integration.py ..."
+    # /usr/bin/time -v "$PYTHON_BIN" "${SCRIPT_DIR}/step7_final_integration.py" \
+    #   "$int_rna_input" \
+    #   "$int_atac_input" \
+    #   "$out_dir" \
+    #   || { echo "  FAILED at step7_final_integration.py"; exit 1; }
 
-    echo ""
-    echo "  Done: $(date)"
+    # echo ""
+    # echo "  Done: $(date)"
 
     echo ""
     echo "Formatting GRN..."
     /usr/bin/time -v "$PYTHON_BIN" "${SCRIPT_DIR}/format_celloracle_grn.py" \
       "$out_dir/output_GRN/celloracle_network_${SAMPLE}_final_GRN.csv" \
-      "$out_dir/output_GRN/celloracle_${CELL_TYPE}_${SAMPLE}.tsv"
+      "$grn_dir/CellOracle/celloracle_${CELL_TYPE}_${SAMPLE}.tsv"
 
   } > "$LOG_DIR/run.log" 2>&1 \
     && echo "  Done" \
@@ -242,7 +243,9 @@ run_condition \
   "$RNA_FILE" \
   "$ATAC_FILE" \
   "$CELL_ORACLE_RESULTS_DIR" \
+  "$GRN_DIR" \
   "$SAMPLE"
+  
 
 echo ""
 echo "========================================"
