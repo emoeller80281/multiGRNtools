@@ -69,6 +69,8 @@ if [ $SPECIES == "mouse" ]; then
     BLACKLIST="${SCRIPT_DIR}/pycisTopic/blacklist/mm10-blacklist.v2.bed"
 fi
 
+CONFIG_PATH="${OUTPUT_DIR}/config/${CELL_TYPE}_${SAMPLE_NAME}_config.yaml"
+
 echo "Input files:"
 echo "    RNA Data File: $RNA_FILE"
 echo "    ATAC Data File: $ATAC_FILE"
@@ -360,7 +362,7 @@ generate_config() {
     --ensembl_species "${ENSEMBL_SPECIES}" \
     --motif_enrichment_species "${MOTIF_ENRICHMENT_SPECIES}" \
     --annotation_version "${ANNOTATION_VERSION}" \
-    --output_config_path "${SCRIPT_DIR}/scplus_pipeline/Snakemake/config/${CELL_TYPE}_${SAMPLE_NAME}_config.yaml"
+    --output_config_path "${CONFIG_PATH}"
 }
 
 check_clusterbuster(){
@@ -592,7 +594,7 @@ echo "===== CHECKS COMPLETE ====="
 #     --chromsize_file_path "${CHROMSIZES}";
 
 echo "Step 3: Getting Transcription Start Site data"
-/usr/bin/time -v pycisTopic.cli.pycistopic tss get_tss \
+/usr/bin/time -v python3 -m pycisTopic.cli.pycistopic tss get_tss \
     --output "${QC_DIR}/tss.bed" \
     --name "${PYCISTOPIC_SPECIES}" \
     --to-chrom-source ucsc \
@@ -610,7 +612,7 @@ run_bash_step "Step 4: Prepare fasta from consensus regions" \
 
 echo "Step 6: Run SCENIC+ snakemake"
 SNAKEFILE="${SCRIPT_DIR}/scplus_pipeline/Snakemake/workflow/Snakefile"
-NEW_CONFIG_PATH="${OUTPUT_DIR}/config/${CELL_TYPE}_${SAMPLE_NAME}_config.yaml"
+
 
 echo "    Running snakemake"
 
