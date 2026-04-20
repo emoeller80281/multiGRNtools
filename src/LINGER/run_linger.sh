@@ -268,59 +268,54 @@ run_step() {
 }
 
 run_pipeline() {
-    #Run each step of the pipeline with resource tracking
-    # run_step "Step_010.Linger_Load_Data" "${BASE_DIR}/Step_010.Linger_Load_Data.py" \
-    #     --rna_data_path "$RNA_FILE" \
-    #     --atac_data_path "$ATAC_FILE" \
-    #     --data_dir "$DATA_DIR" \
-    #     --sample_data_dir "$LINGER_RESULTS_DIR" \
-    #     --organism "$SPECIES" \
-    #     --cell_type "$CELL_TYPE" \
-    #     --genome "$GENOME" \
-    #     --method "$METHOD"
+    run_step "Step_010.Linger_Load_Data" "${BASE_DIR}/Step_010.Linger_Load_Data.py" \
+        --rna_data_path "$RNA_FILE" \
+        --atac_data_path "$ATAC_FILE" \
+        --data_dir "$DATA_DIR" \
+        --sample_data_dir "$LINGER_RESULTS_DIR" \
+        --organism "$SPECIES" \
+        --cell_type "$CELL_TYPE" \
+        --genome "$GENOME" \
+        --method "$METHOD"
 
-    # run_step "Step_020.Linger_Training" "${BASE_DIR}/Step_020.Linger_Training.py" \
-    #     --tss_motif_info_path "$TSS_MOTIF_INFO_PATH" \
-    #     --genome "$GENOME" \
-    #     --method "$METHOD" \
-    #     --sample_data_dir "$LINGER_RESULTS_DIR" \
-    #     --activef "$ACTIVEF" \
-    #     --organism "$SPECIES" 
+    run_step "Step_020.Linger_Training" "${BASE_DIR}/Step_020.Linger_Training.py" \
+        --tss_motif_info_path "$TSS_MOTIF_INFO_PATH" \
+        --genome "$GENOME" \
+        --method "$METHOD" \
+        --sample_data_dir "$LINGER_RESULTS_DIR" \
+        --activef "$ACTIVEF" \
+        --organism "$SPECIES" 
 
-    # run_step "Step_030.Create_Cell_Population_GRN" "${BASE_DIR}/Step_030.Create_Cell_Population_GRN.py" \
-    #     --tss_motif_info_path "$TSS_MOTIF_INFO_PATH" \
-    #     --genome "$GENOME" \
-    #     --method "$METHOD" \
-    #     --sample_data_dir "$LINGER_RESULTS_DIR" \
-    #     --activef "$ACTIVEF" \
-    #     --organism "$SPECIES" \
-    #     --num_cpu "$NUM_CPU"
+    run_step "Step_030.Create_Cell_Population_GRN" "${BASE_DIR}/Step_030.Create_Cell_Population_GRN.py" \
+        --tss_motif_info_path "$TSS_MOTIF_INFO_PATH" \
+        --genome "$GENOME" \
+        --method "$METHOD" \
+        --sample_data_dir "$LINGER_RESULTS_DIR" \
+        --activef "$ACTIVEF" \
+        --organism "$SPECIES" \
+        --num_cpu "$NUM_CPU"
 
+    run_step "Step_040.Homer_Motif_Finding" "${BASE_DIR}/Step_040.Homer_Motif_Finding.py" \
+        --tss_motif_info_path "$TSS_MOTIF_INFO_PATH" \
+        --sample_data_dir "$LINGER_RESULTS_DIR" \
+        --genome "$GENOME"
 
-    # run_step "Step_040.Homer_Motif_Finding" "${BASE_DIR}/Step_040.Homer_Motif_Finding.py" \
-    #     --tss_motif_info_path "$TSS_MOTIF_INFO_PATH" \
-    #     --sample_data_dir "$LINGER_RESULTS_DIR" \
-    #     --genome "$GENOME"
-
-    # run_step "Step_050.Create_Cell_Type_GRN" "${BASE_DIR}/Step_050.Create_Cell_Type_GRN.py" \
-    #     --tss_motif_info_path "$TSS_MOTIF_INFO_PATH" \
-    #     --genome "$GENOME" \
-    #     --method "$METHOD" \
-    #     --sample_data_dir "$LINGER_RESULTS_DIR" \
-    #     --cell_type "$CELL_TYPE" \
-    #     --organism "$SPECIES" \
-    #     --num_cpu "$NUM_CPU"
+    run_step "Step_050.Create_Cell_Type_GRN" "${BASE_DIR}/Step_050.Create_Cell_Type_GRN.py" \
+        --tss_motif_info_path "$TSS_MOTIF_INFO_PATH" \
+        --genome "$GENOME" \
+        --method "$METHOD" \
+        --sample_data_dir "$LINGER_RESULTS_DIR" \
+        --cell_type "$CELL_TYPE" \
+        --organism "$SPECIES" \
+        --num_cpu "$NUM_CPU"
 
     GRN_FILE="${LINGER_RESULTS_DIR}/cell_type_specific_trans_regulatory_${CELL_TYPE}.txt"
-
     run_step "Step_060.Format_Inferred_GRN" "${BASE_DIR}/Step_060.Format_Inferred_Grn.py" \
         --output_dir "${GRN_DIR}/LINGER/" \
         --inferred_grn_file "${GRN_FILE}" \
         --cell_type "$CELL_TYPE" \
         --sample_name "$SAMPLE_NAME"
 }
-
-
 
 # ==========================================
 #               MAIN

@@ -7,25 +7,26 @@
 #SBATCH --nodes=1
 #SBATCH -c 1
 #SBATCH --mem=4G
-#SBATCH --array=0-8%10
+#SBATCH --array=0%10
 
 # ===== METHOD SELECTION =====
 RUN_CELLORACLE=false
-RUN_LINGER=true
+RUN_LINGER=false
+RUN_SCENIC_PLUS=true
 
 # ===== SAMPLE CONFIGURATION =====
 EXPERIMENT_LIST=(
-    "mESC|E7.5_rep1|mouse|mESC"
-    "mESC|E7.5_rep2|mouse|mESC"
-    "mESC|E8.5_rep1|mouse|mESC"
-    "mESC|E8.5_rep2|mouse|mESC"
+    # "mESC|E7.5_rep1|mouse|mESC"
+    # "mESC|E7.5_rep2|mouse|mESC"
+    # "mESC|E8.5_rep1|mouse|mESC"
+    # "mESC|E8.5_rep2|mouse|mESC"
 
     "Macrophage|buffer_1|human|Macrophage"
-    "Macrophage|buffer_2|human|Macrophage"
-    "Macrophage|buffer_3|human|Macrophage"
-    "Macrophage|buffer_4|human|Macrophage"
+    # "Macrophage|buffer_2|human|Macrophage"
+    # "Macrophage|buffer_3|human|Macrophage"
+    # "Macrophage|buffer_4|human|Macrophage"
 
-    "iPSC|WT_D13_rep1|human|iPSC"
+    # "iPSC|WT_D13_rep1|human|iPSC"
 
     # "K562|sample_1|human|K562"
 )
@@ -98,9 +99,23 @@ if [ "$RUN_LINGER" = true ]; then
     mkdir -p "${log_dir}"
 
     sbatch \
-        --export=PROJECT_DIR="$PROJECT_DIR",DATA_DIR="$DATA_DIR",RAW_DATA_DIR="$RAW_DATA_DIR",RESULTS_DIR="$sample_result_dir",LOG_DIR="$log_dir",GRN_DIR="$GRN_DIR",CELL_TYPE="$CELL_TYPE",SAMPLE_NAME="$SAMPLE_NAME",SPECIES="$SPECIES",RNA_FILE="$rna_file",ATAC_FILE="$atac_file" \
+        --export=PROJECT_DIR="$PROJECT_DIR",DATA_DIR="$DATA_DIR",RESULTS_DIR="$sample_result_dir",LOG_DIR="$log_dir",GRN_DIR="$GRN_DIR",CELL_TYPE="$CELL_TYPE",SAMPLE_NAME="$SAMPLE_NAME",SPECIES="$SPECIES",RNA_FILE="$rna_file",ATAC_FILE="$atac_file" \
         --job-name="SCMULTI_PREDICT_LINGER_${CELL_TYPE}_${SAMPLE_NAME}" \
         --output=${log_dir}/LINGER.log \
         --error=${log_dir}/LINGER.err \
         "${PROJECT_DIR}/src/LINGER/run_linger.sh"
+fi
+
+if [ "$RUN_SCENIC_PLUS" = true ]; then
+    echo "Submitting SCENIC+ job for ${CELL_TYPE} - ${SAMPLE_NAME} (Task ID: ${ARRAY_TASK_ID})"
+
+    log_dir="${PROJECT_DIR}/LOGS/SCENIC_PLUS/${CELL_TYPE}/${SAMPLE_NAME}"
+    mkdir -p "${log_dir}"
+
+    sbatch \
+        --export=PROJECT_DIR="$PROJECT_DIR",DATA_DIR="$DATA_DIR",RESULTS_DIR="$sample_result_dir",REFERENCE_GENOME_DIR="$REFERENCE_GENOME_DIR",LOG_DIR="$log_dir",GRN_DIR="$GRN_DIR",CELL_TYPE="$CELL_TYPE",SAMPLE_NAME="$SAMPLE_NAME",SPECIES="$SPECIES",RNA_FILE="$rna_file",ATAC_FILE="$atac_file" \
+        --job-name="SCMULTI_PREDICT_SCENIC_PLUS_${CELL_TYPE}_${SAMPLE_NAME}" \
+        --output=${log_dir}/SCENIC_PLUS.log \
+        --error=${log_dir}/SCENIC_PLUS.err \
+        "${PROJECT_DIR}/src/SCENIC_PLUS/run_scenic_plus.sh"
 fi
