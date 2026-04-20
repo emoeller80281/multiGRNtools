@@ -25,9 +25,13 @@ SCENIC_DATA_DIR="${DATA_DIR}/SCENIC_PLUS"
 SCRIPT_DIR="${PROJECT_DIR}/src/SCENIC_PLUS"
 OUTPUT_DIR="${RESULTS_DIR}/SCENIC_PLUS/"
 REGION_BED="${OUTPUT_DIR}/consensus_peak_calling/consensus_regions.bed"
-CISTARGET_SCRIPT_DIR="${SCRIPT_DIR}/create_cisTarget_databases"
+CISTARGET_SCRIPT_DIR="${SCRIPT_DIR}/scenicplus/create_cisTarget_databases"
 TEMP_DIR="${SCENIC_DATA_DIR}/tmp/${CELL_TYPE}_${SAMPLE_NAME}_tmp"
 QC_DIR="${OUTPUT_DIR}/qc"
+
+PYCISTOPIC_PROJECT_DIR="${SCRIPT_DIR}/pycisTopic"
+PYCISTOPIC_SRC_DIR="${PYCISTOPIC_PROJECT_DIR}/src"
+
 MOTIF_COLLECTION_DIR="${SCENIC_DATA_DIR}/aertslab_motif_colleciton"
 MOTIF_DATABASE_DIR="${MOTIF_COLLECTION_DIR}/v10nr_clust_public/snapshots"
 
@@ -213,7 +217,7 @@ install_scenic_plus() {
 install_pycistopic() {
     echo ""
     echo "[INFO] Checking that pycisTopic is installed"
-    local repo_dir="${SCRIPT_DIR}/pycisTopic"
+    local repo_dir="${PYCISTOPIC_PROJECT_DIR}"
     local logf="${LOG_DIR}/install_pycistopic.log"
 
     if [[ ! -d "$repo_dir" ]]; then
@@ -224,7 +228,7 @@ install_pycistopic() {
         # run both clone and install, capturing all output
         {
             echo "---- Cloning pycisTopic ----"
-            git clone https://github.com/aertslab/pycisTopic.git "$repo_dir"
+            git clone --branch pycistopic_v3 --single-branch https://github.com/aertslab/pycisTopic.git "$repo_dir"
             echo "---- Installing pycisTopic ----"
             pip install -e "$repo_dir"
         } > "$logf" 2>&1
@@ -471,7 +475,7 @@ check_organism_genome_files(){
         echo "Using pre-computed cisTarget database"
 
         # Ensure destination directory exists
-        mkdir -p "$INPUT_DIR"
+        mkdir -p "$ORGANISM_DIR"
 
         # File: rankings.feather
         if [ -f "${ORGANISM_DIR}/${CISTARGET_RANKINGS_PRECOMP}" ]; then
@@ -575,20 +579,20 @@ check_file_exists "$GENOME_FASTA"
 echo ""
 echo "===== CHECKS COMPLETE ====="
 
-run_python_step "Step 1: RNA preprocessing" "${SCRIPT_DIR}/Step01.RNA_preprocessing.py" \
-    --rna_file "${RNA_FILE}" \
-    --output_dir "${OUTPUT_DIR}" \
+# run_python_step "Step 1: RNA preprocessing" "${SCRIPT_DIR}/Step01.RNA_preprocessing.py" \
+#     --rna_file "${RNA_FILE}" \
+#     --output_dir "${OUTPUT_DIR}" \
 
 
-run_python_step "Step 2: ATAC preprocessing" "${SCRIPT_DIR}/Step02.ATAC_preprocessing.py" \
-    --atac_file "${ATAC_FILE}" \
-    --output_dir "${OUTPUT_DIR}" \
-    --tmp_dir "${TEMP_DIR}" \
-    --blacklist "${BLACKLIST}" \
-    --chromsize_file_path "${CHROMSIZES}";
+# run_python_step "Step 2: ATAC preprocessing" "${SCRIPT_DIR}/Step02.ATAC_preprocessing.py" \
+#     --atac_file "${ATAC_FILE}" \
+#     --output_dir "${OUTPUT_DIR}" \
+#     --tmp_dir "${TEMP_DIR}" \
+#     --blacklist "${BLACKLIST}" \
+#     --chromsize_file_path "${CHROMSIZES}";
 
 echo "Step 3: Getting Transcription Start Site data"
-/usr/bin/time -v pycistopic tss get_tss \
+/usr/bin/time -v pycisTopic.cli.pycistopic tss get_tss \
     --output "${QC_DIR}/tss.bed" \
     --name "${PYCISTOPIC_SPECIES}" \
     --to-chrom-source ucsc \
@@ -606,7 +610,7 @@ run_bash_step "Step 4: Prepare fasta from consensus regions" \
 
 echo "Step 6: Run SCENIC+ snakemake"
 SNAKEFILE="${SCRIPT_DIR}/scplus_pipeline/Snakemake/workflow/Snakefile"
-NEW_CONFIG_PATH="${SAMPLE_RESULT_DIR}/config/${CELL_TYPE}_${SAMPLE_NAME}_config.yaml"
+NEW_CONFIG_PATH="${OUTPUT_DIR}/config/${CELL_TYPE}_${SAMPLE_NAME}_config.yaml"
 
 echo "    Running snakemake"
 

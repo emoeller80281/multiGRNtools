@@ -7,3 +7,7 @@ LOGS/*
 .rds
 .out
 formatted_GRNs/*
+src/SCENIC_PLUS/scenicplus/
+.pybiomart.sqlite
+cbust
+scplus_pipeline
