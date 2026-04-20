@@ -406,7 +406,38 @@ def TF_RE_binding(GRNdir,data_dir,adata_RNA,adata_ATAC,genome,method,outdir,num_
         
         result = pd.concat(results_list, axis=0) if results_list else pd.DataFrame([])
     result.to_csv(os.path.join(outdir, 'cell_population_TF_RE_binding.txt'),sep='\t')   
-        
+
+# Helper functions for parallelization of cell-type specific functions
+def process_celltype_chr_tf_re_binding(args):
+    """Process a single chromosome for cell-type specific TF-RE binding."""
+    adata_RNA, adata_ATAC, GRNdir, chrN, genome, celltype, outdir, method = args
+    mat = pd.read_csv(
+        os.path.join(outdir, f'{chrN}_cell_population_TF_RE_binding.txt'),
+        sep='\t', index_col=0, header=0
+    )
+    out = cell_type_specific_TF_RE_binding_chr(
+        adata_RNA, adata_ATAC, GRNdir, chrN, genome, celltype, outdir, method, mat
+    )
+    return out
+
+def process_celltype_chr_cis_reg(args):
+    """Process a single chromosome for cell-type specific cis-regulatory network."""
+    GRNdir, adata_RNA, adata_ATAC, genome, chrN, celltype, outdir = args
+    temp = cell_type_specific_cis_reg_chr(GRNdir, adata_RNA, adata_ATAC, genome, chrN, celltype, outdir)
+    return temp
+
+def process_celltype_trans_reg(args):
+    """Process trans-regulatory network for a single cell type."""
+    GRNdir, adata_RNA, outdir, celltype = args
+    Binding = pd.read_csv(os.path.join(outdir, f'cell_type_specific_TF_RE_binding_{celltype}.txt'), sep='\t', index_col=0)
+    cis = load_cis(Binding, celltype, outdir)
+    TFset = Binding.columns
+    TGset = cis.columns
+    S = np.matmul(Binding.values.T, cis.values).T
+    S = pd.DataFrame(S, index=TGset, columns=TFset)
+    S.to_csv(os.path.join(outdir, f'cell_type_specific_trans_regulatory_{celltype}.txt'), sep='\t')
+    return celltype
+
 def load_TFbinding_scNN(GRNdir,outdir,genome):
     genome_map=pd.read_csv(os.path.join(GRNdir, 'genome_map_homer.txt'),sep='\t',header=0)
     genome_map.index=genome_map['genome_short'].values 
@@ -487,7 +518,7 @@ def cell_type_specific_TF_RE_binding_score_scNN(mat,TFbinding,RE,TG,TFoverlap):
     S.index=mat.index
     return S
 
-def cell_type_specific_TF_RE_binding(GRNdir, adata_RNA, adata_ATAC, genome, celltype, outdir, method):
+def cell_type_specific_TF_RE_binding(GRNdir, adata_RNA, adata_ATAC, genome, celltype, outdir, method, num_cpu=8):
     label = adata_RNA.obs['label'].values
     labelset = list(set(label))
 
@@ -497,31 +528,28 @@ def cell_type_specific_TF_RE_binding(GRNdir, adata_RNA, adata_ATAC, genome, cell
     if (celltype == 'all') and (method != 'scNN'):
         for label0 in labelset:
             logging.info('Generate cell type specific TF binding potential for cell type ' + str(label0) + '...')
-            result = pd.DataFrame()
-
-            # autosomes
-            for i in tqdm(range(22)):
-                chrN = 'chr' + str(i + 1)
-                mat = pd.read_csv(
-                    os.path.join(outdir, f'{chrN}_cell_population_TF_RE_binding.txt'),
-                    sep='\t', index_col=0, header=0
-                )
-                out = cell_type_specific_TF_RE_binding_chr(
-                    adata_RNA, adata_ATAC, GRNdir, chrN, genome, label0, outdir, method, mat
-                )
-                result = pd.concat([result, out], join='outer', axis=0)
-
-            # chrX
-            chrN = 'chrX'
-            mat = pd.read_csv(
-                os.path.join(outdir, f'{chrN}_cell_population_TF_RE_binding.txt'),
-                sep='\t', index_col=0, header=0
-            )
-            out = cell_type_specific_TF_RE_binding_chr(
-                adata_RNA, adata_ATAC, GRNdir, chrN, genome, label0, outdir, method, mat
-            )
-            result = pd.concat([result, out], join='outer', axis=0).fillna(0)
-
+            chrom = ['chr' + str(i + 1) for i in range(22)] + ['chrX']
+            
+            # Process chromosomes in parallel
+            results_list = []
+            max_workers = min(len(chrom), int(num_cpu))
+            
+            with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                future_to_chr = {
+                    executor.submit(process_celltype_chr_tf_re_binding, 
+                        (adata_RNA, adata_ATAC, GRNdir, chrN, genome, label0, outdir, method)): chrN
+                    for chrN in chrom
+                }
+                
+                for future in as_completed(future_to_chr):
+                    chrN = future_to_chr[future]
+                    try:
+                        out = future.result()
+                        results_list.append(out)
+                    except Exception as exc:
+                        logging.error(f'Chromosome {chrN} failed for cell type {label0}: {exc}')
+            
+            result = pd.concat(results_list, join='outer', axis=0).fillna(0) if results_list else pd.DataFrame()
             result.to_csv(
                 os.path.join(outdir, f'cell_type_specific_TF_RE_binding_{str(label0)}.txt'),
                 sep='\t'
@@ -531,19 +559,28 @@ def cell_type_specific_TF_RE_binding(GRNdir, adata_RNA, adata_ATAC, genome, cell
     # 2) Non-scNN, specific cell type
     # ------------------------------------------------------------------
     elif method != 'scNN':
-        result = pd.DataFrame()
         chrom = ['chr' + str(i + 1) for i in range(22)] + ['chrX']
-
-        for chrN in tqdm(chrom):
-            mat = pd.read_csv(
-                os.path.join(outdir, f'{chrN}_cell_population_TF_RE_binding.txt'),
-                sep='\t', index_col=0, header=0
-            )
-            out = cell_type_specific_TF_RE_binding_chr(
-                adata_RNA, adata_ATAC, GRNdir, chrN, genome, celltype, outdir, method, mat
-            )
-            result = pd.concat([result, out], join='outer', axis=0)
-
+        
+        # Process chromosomes in parallel
+        results_list = []
+        max_workers = min(len(chrom), int(num_cpu))
+        
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            future_to_chr = {
+                executor.submit(process_celltype_chr_tf_re_binding,
+                    (adata_RNA, adata_ATAC, GRNdir, chrN, genome, celltype, outdir, method)): chrN
+                for chrN in chrom
+            }
+            
+            for future in as_completed(future_to_chr):
+                chrN = future_to_chr[future]
+                try:
+                    out = future.result()
+                    results_list.append(out)
+                except Exception as exc:
+                    logging.error(f'Chromosome {chrN} failed for cell type {celltype}: {exc}')
+        
+        result = pd.concat(results_list, join='outer', axis=0) if results_list else pd.DataFrame()
         result.to_csv(
             os.path.join(outdir, f'cell_type_specific_TF_RE_binding_{str(celltype)}.txt'),
             sep='\t'
@@ -977,35 +1014,65 @@ def cell_type_specific_cis_reg_scNN(distance,cisGRN,RE,TG,REs,TGs):
     resultall=pd.DataFrame(combined)
     return resultall 
 
-def cell_type_specific_cis_reg(GRNdir,adata_RNA,adata_ATAC,genome,celltype,outdir,method): 
+def cell_type_specific_cis_reg(GRNdir,adata_RNA,adata_ATAC,genome,celltype,outdir,method,num_cpu=8): 
 
     label=adata_RNA.obs['label'].values.tolist()
     labelset=list(set(label))
     chrom=['chr'+str(i+1) for i in range(22)]
     chrom.append('chrX')
-    from tqdm import tqdm
+    
     if (celltype=='all')&(method!='scNN'):
         for label0 in labelset:
             label0=str(label0)
-            result=pd.DataFrame([])
-            for i in tqdm(range(23)):
-                chrN=chrom[i]
-                temp=cell_type_specific_cis_reg_chr(GRNdir,adata_RNA,adata_ATAC,genome,chrN,label0,outdir)
-                result=pd.concat([result,temp],axis=0,join='outer')
-            chrN='chrX'
-            temp=cell_type_specific_cis_reg_chr(GRNdir,adata_RNA,adata_ATAC,genome,chrN,label0,outdir)
-            result=pd.concat([result,temp],axis=0,join='outer')
+            logging.info(f'Calculating cell-type specific cis-regulatory network for celltype "{label0}"')
+            
+            # Process chromosomes in parallel
+            results_list = []
+            max_workers = min(len(chrom), int(num_cpu))
+            
+            with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                future_to_chr = {
+                    executor.submit(process_celltype_chr_cis_reg,
+                        (GRNdir, adata_RNA, adata_ATAC, genome, chrN, label0, outdir)): chrN
+                    for chrN in chrom
+                }
+                
+                for future in as_completed(future_to_chr):
+                    chrN = future_to_chr[future]
+                    try:
+                        temp = future.result()
+                        results_list.append(temp)
+                    except Exception as exc:
+                        logging.error(f'Chromosome {chrN} failed for cell type {label0}: {exc}')
+            
+            result = pd.concat(results_list, axis=0, join='outer') if results_list else pd.DataFrame([])
             result.to_csv(os.path.join(outdir, f'cell_type_specific_cis_regulatory_{str(label0)}.txt'),sep='\t',header=None,index=None)
+            
     elif (method!='scNN'):
-            result=pd.DataFrame([])
-            for i in tqdm(range(23)):
-                chrN=chrom[i]
-                temp=cell_type_specific_cis_reg_chr(GRNdir,adata_RNA,adata_ATAC,genome,chrN,celltype,outdir)
-                result=pd.concat([result,temp],axis=0,join='outer')
-            chrN='chrX'
-            temp=cell_type_specific_cis_reg_chr(GRNdir,adata_RNA,adata_ATAC,genome,chrN,celltype,outdir)
-            result=pd.concat([result,temp],axis=0,join='outer')
-            result.to_csv(os.path.join(outdir, f'cell_type_specific_cis_regulatory_{celltype}.txt'),sep='\t',header=None,index=None)
+        logging.info(f'Calculating cell-type specific cis-regulatory network for celltype "{celltype}"')
+        
+        # Process chromosomes in parallel
+        results_list = []
+        max_workers = min(len(chrom), int(num_cpu))
+        
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            future_to_chr = {
+                executor.submit(process_celltype_chr_cis_reg,
+                    (GRNdir, adata_RNA, adata_ATAC, genome, chrN, celltype, outdir)): chrN
+                for chrN in chrom
+            }
+            
+            for future in as_completed(future_to_chr):
+                chrN = future_to_chr[future]
+                try:
+                    temp = future.result()
+                    results_list.append(temp)
+                except Exception as exc:
+                    logging.error(f'Chromosome {chrN} failed for cell type {celltype}: {exc}')
+        
+        result = pd.concat(results_list, axis=0, join='outer') if results_list else pd.DataFrame([])
+        result.to_csv(os.path.join(outdir, f'cell_type_specific_cis_regulatory_{celltype}.txt'),sep='\t',header=None,index=None)
+        
     elif (celltype=='all')&(method=='scNN'):
         distance,cisGRN,REs,TGs=load_RE_TG_scNN(outdir)
         for label0 in labelset:
@@ -1165,26 +1232,33 @@ def trans_reg(GRNdir,data_dir,method,outdir,genome,num_cpu):
     logging.info('Save trans-regulatory netowrk ...')
     S.to_csv(os.path.join(outdir, 'cell_population_trans_regulatory.txt'),sep='\t')
 
-def cell_type_specific_trans_reg(GRNdir,adata_RNA,celltype,outdir):
+def cell_type_specific_trans_reg(GRNdir,adata_RNA,celltype,outdir,num_cpu=8):
     label=adata_RNA.obs['label'].values.tolist()
     labelset=list(set(label))
     if celltype=='all':
-        for label0 in labelset:
-            Binding=pd.read_csv(os.path.join(outdir, f'cell_type_specific_TF_RE_binding_{str(label0)}.txt'),sep='\t',index_col=0)
-            label0=str(label0)
-            cis=load_cis(Binding,label0,outdir)
-            TFset=Binding.columns
-            TGset=cis.columns
-            #TF_TG=load_TF_TG(GRNdir, TFset,TGset)
-            S=np.matmul(Binding.values.T, cis.values).T#*(TF_TG.values.T).T
-            S=pd.DataFrame(S, index=TGset,columns=TFset)
-            S.to_csv(os.path.join(outdir, f'cell_type_specific_trans_regulatory_{str(label0)}.txt'),sep='\t')
+        # Process cell types in parallel
+        results_list = []
+        max_workers = min(len(labelset), int(num_cpu))
+        
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            future_to_celltype = {
+                executor.submit(process_celltype_trans_reg,
+                    (GRNdir, adata_RNA, outdir, str(label0))): label0
+                for label0 in labelset
+            }
+            
+            for future in as_completed(future_to_celltype):
+                label0 = future_to_celltype[future]
+                try:
+                    celltype_result = future.result()
+                    logging.info(f'Generated trans-regulatory network for cell type {celltype_result}')
+                except Exception as exc:
+                    logging.error(f'Cell type {label0} failed: {exc}')
     else:
         Binding=pd.read_csv(os.path.join(outdir, f'cell_type_specific_TF_RE_binding_{celltype}.txt'),sep='\t',index_col=0)
         cis=load_cis(Binding,celltype,outdir)
         TFset=Binding.columns
         TGset=cis.columns
-        #TF_TG=load_TF_TG(GRNdir, TFset,TGset)
-        S=np.matmul(Binding.values.T, cis.values).T#*(TF_TG.values.T).T
+        S=np.matmul(Binding.values.T, cis.values).T
         S=pd.DataFrame(S, index=TGset,columns=TFset)
         S.to_csv(os.path.join(outdir, f'cell_type_specific_trans_regulatory_{celltype}.txt'),sep='\t')

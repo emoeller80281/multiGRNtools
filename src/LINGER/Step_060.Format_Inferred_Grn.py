@@ -1,4 +1,3 @@
-import mudata
 import pandas as pd
 import argparse
 import logging
@@ -56,7 +55,9 @@ def main():
 
     output_file_name = f"{output_dir}/linger_{cell_type}_{sample_name}.tsv"
 
+    logging.info(f"Saving formatted inferred GRN to {output_file_name}")
     df_long.to_csv(output_file_name, sep="\t", header=True, index=False)
+    logging.info("  - Done!")
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(message)s")

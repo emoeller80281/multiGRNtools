@@ -20,9 +20,9 @@ parser.add_argument("--tss_motif_info_path", required=True, help="Path to the LI
 parser.add_argument("--genome", required=True, help="Organism genome code")
 parser.add_argument("--method", required=True, help="Training method")
 parser.add_argument("--sample_data_dir", required=True, help="Directory containing LINGER intermediate files")
-parser.add_argument("--celltype", required=True, help="Cell type for calculating cell-type specific GRNs")
+parser.add_argument("--cell_type", required=True, help="Cell type for calculating cell-type specific GRNs")
 parser.add_argument("--organism", required=True, help='Enter "mouse" or "human"')
-
+parser.add_argument("--num_cpu", default=8, help="Number of CPUs to use for parallel processing")
 
 args = parser.parse_args()
 
@@ -36,34 +36,37 @@ if args.method.lower() == "scnn":
 
   output_dir = args.sample_data_dir + "/"
 
-  logging.info(f'Calculating cell-type specific TF RE binding for celltype "{args.celltype}"')
+  logging.info(f'Calculating cell-type specific TF RE binding for celltype "{args.cell_type}"')
   LL_net.cell_type_specific_TF_RE_binding(
     args.tss_motif_info_path,
     adata_RNA,
     adata_ATAC,
     args.genome,
-    args.celltype,
+    args.cell_type,
     output_dir,
-    args.method
+    args.method,
+    args.num_cpu
     )
 
-  logging.info(f'Calculating cell-type specific cis-regulatory network for celltype "{args.celltype}"')
+  logging.info(f'Calculating cell-type specific cis-regulatory network for celltype "{args.cell_type}"')
   LL_net.cell_type_specific_cis_reg(
     args.tss_motif_info_path,
     adata_RNA,
     adata_ATAC,
     args.genome,
-    args.celltype,
+    args.cell_type,
     output_dir,
-    args.method
+    args.method,
+    args.num_cpu
     )
 
-  logging.info(f'Calculating cell-type specific trans-regulatory network for celltype "{args.celltype}"')
+  logging.info(f'Calculating cell-type specific trans-regulatory network for celltype "{args.cell_type}"')
   LL_net.cell_type_specific_trans_reg(
     args.tss_motif_info_path,
     adata_RNA,
-    args.celltype,
+    args.cell_type,
     output_dir,
+    args.num_cpu
     )
 
 elif args.method.lower() == "linger":
@@ -75,32 +78,35 @@ elif args.method.lower() == "linger":
 
   output_dir = args.sample_data_dir + "/"
 
-  logging.info(f'Calculating cell-type specific TF RE binding for celltype "{args.celltype}"')
+  logging.info(f'Calculating cell-type specific TF RE binding for celltype "{args.cell_type}"')
   LL_net.cell_type_specific_TF_RE_binding(
     args.tss_motif_info_path,
     adata_RNA,
     adata_ATAC,
     args.genome,
-    args.celltype,
+    args.cell_type,
     output_dir,
-    args.method
+    args.method,
+    args.num_cpu
     )
 
-  logging.info(f'Calculating cell-type specific cis-regulatory network for celltype "{args.celltype}"')
+  logging.info(f'Calculating cell-type specific cis-regulatory network for celltype "{args.cell_type}"')
   LL_net.cell_type_specific_cis_reg(
     args.tss_motif_info_path,
     adata_RNA,
     adata_ATAC,
     args.genome,
-    args.celltype,
+    args.cell_type,
     output_dir,
-    args.method
+    args.method,
+    args.num_cpu
     )
 
-  logging.info(f'Calculating cell-type specific trans-regulatory network for celltype "{args.celltype}"')
+  logging.info(f'Calculating cell-type specific trans-regulatory network for celltype "{args.cell_type}"')
   LL_net.cell_type_specific_trans_reg(
     args.tss_motif_info_path,
     adata_RNA,
-    args.celltype,
+    args.cell_type,
     output_dir,
+    args.num_cpu
     )
