@@ -203,7 +203,12 @@ install_scenic_plus() {
         {
             echo "---- Cloning scenicplus ----"
             git clone https://github.com/emoeller80281/SCENIC_PLUS.git "$repo_dir"
-            pip install -e "$repo_dir"
+            echo "---- Initializing git submodules ----"
+            cd "$repo_dir"
+            git submodule update --init --recursive
+            cd - > /dev/null
+            echo "---- Installing scenicplus package ----"
+            pip install -e "$repo_dir" --no-cache-dir
         } > "$logf" 2>&1
 
         if [[ $? -ne 0 ]]; then
