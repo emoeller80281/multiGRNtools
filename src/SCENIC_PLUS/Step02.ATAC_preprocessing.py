@@ -47,6 +47,7 @@ chromsizes = pd.read_table(
 )
 chromsizes.insert(1, "Start", 0)
 
+logging.info(f"chromsizes saved to {output_dir}/chromsizes.tsv")
 chromsizes.to_csv(f'{output_dir}/chromsizes.tsv', index=False, sep='\t')
 logging.info(chromsizes.head())
 

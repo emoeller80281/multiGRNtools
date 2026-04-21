@@ -11,6 +11,7 @@
 
 # ===== METHOD SELECTION =====
 RUN_CELLORACLE=false
+RUN_DIRECTNET=false
 RUN_LINGER=false
 RUN_SCENIC_PLUS=true
 
@@ -91,6 +92,20 @@ if [ "$RUN_CELLORACLE" = true ]; then
         --error=${log_dir}/CellOracle.err \
         "${PROJECT_DIR}/src/Celloracle/run_CellOracle.sh"
 fi
+
+    if [ "$RUN_DIRECTNET" = true ]; then
+        echo "Submitting DIRECTNET job for ${CELL_TYPE} - ${SAMPLE_NAME} (Task ID: ${ARRAY_TASK_ID})"
+
+        log_dir="${PROJECT_DIR}/LOGS/DIRECTNET/${CELL_TYPE}/${SAMPLE_NAME}"
+        mkdir -p "${log_dir}"
+
+        sbatch \
+        --export=PROJECT_DIR="$PROJECT_DIR",RESULTS_DIR="$RESULTS_DIR",REFERENCE_GENOME_DIR="$REFERENCE_GENOME_DIR",CELL_TYPE="$CELL_TYPE",SAMPLE_NAME="$SAMPLE_NAME",SPECIES="$SPECIES",RNA_FILE="$rna_file",ATAC_FILE="$atac_file" \
+        --job-name="SCMULTI_PREDICT_DIRECTNET_${CELL_TYPE}_${SAMPLE_NAME}" \
+        --output=${log_dir}/DIRECTNET.log \
+        --error=${log_dir}/DIRECTNET.err \
+        "${PROJECT_DIR}/src/DIRECTNET/run_DIRECTNET.sh"
+    fi
 
 if [ "$RUN_LINGER" = true ]; then
     echo "Submitting LINGER job for ${CELL_TYPE} - ${SAMPLE_NAME} (Task ID: ${ARRAY_TASK_ID})"

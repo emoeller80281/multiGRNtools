@@ -1,0 +1,17 @@
+name: directnet_env
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - r-base=4.3
+  - r-essentials
+  - r-devtools
+  - r-remotes
+  - r-data.table
+  - r-tidyverse
+  - r-irkernel
+  - libxml2
+  - libcurl
+  - openssl
+  - zlib
+  - hdf5

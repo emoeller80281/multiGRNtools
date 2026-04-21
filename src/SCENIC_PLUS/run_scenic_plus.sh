@@ -258,7 +258,7 @@ install_scenic_plus() {
     fi
 
     # Prefer the local pycisTopic checkout to keep behavior reproducible.
-    if ! python3 -c "import pycistopic" 2>/dev/null; then
+    if ! python3 -c "import pycisTopic" 2>/dev/null; then
         echo "    - pycisTopic is missing; installing local editable package"
         if ! pip install -e "$pycistopic_local_dir" --no-cache-dir >> "$logf" 2>&1; then
             echo "[ERROR] Failed to install local pycisTopic from $pycistopic_local_dir. See $logf"
@@ -268,8 +268,8 @@ install_scenic_plus() {
         # If pycisTopic imports but is not from the local checkout, reinstall local editable.
         if ! python3 - <<EOF >/dev/null 2>&1
 import os
-import pycistopic
-module_path = os.path.realpath(getattr(pycistopic, "__file__", ""))
+import pycisTopic
+module_path = os.path.realpath(getattr(pycisTopic, "__file__", ""))
 local_root = os.path.realpath("${pycistopic_local_dir}")
 raise SystemExit(0 if module_path.startswith(local_root) else 1)
 EOF
@@ -640,6 +640,14 @@ check_organism_genome_files
 
 check_file_exists "$BLACKLIST"
 check_file_exists "$GENOME_FASTA"
+check_file_exists "$CHROMSIZES"
+
+# Make CHROMSIZES available to Snakemake shell rules for fallback handling.
+export CHROMSIZES
+
+# Seed chromsizes in the output directory so downstream steps have a valid file
+# even when automatic genome lookup cannot resolve assembly sizes.
+cp -f "$CHROMSIZES" "${OUTPUT_DIR}/chromsizes.tsv"
 
 echo ""
 echo "===== CHECKS COMPLETE ====="
@@ -694,6 +702,7 @@ cd "${SCRIPT_DIR}/scenicplus/scplus_pipeline/Snakemake"
     --snakefile $SNAKEFILE \
     --latency-wait 600 \
     --configfile $CONFIG_PATH \
+    --rerun-incomplete \
     > "${LOG_DIR}/Step 6: Snakemake.log" 2>&1;
 
 echo "Done!"
