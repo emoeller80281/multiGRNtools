@@ -23,14 +23,13 @@ CONDA_ENV_NAME="scenicplus_test"
 SCENIC_DATA_DIR="${DATA_DIR}/SCENIC_PLUS"
 
 SCRIPT_DIR="${PROJECT_DIR}/src/SCENIC_PLUS"
-OUTPUT_DIR="${RESULTS_DIR}/SCENIC_PLUS/"
+OUTPUT_DIR="${RESULTS_DIR}/SCENIC_PLUS"
 REGION_BED="${OUTPUT_DIR}/consensus_peak_calling/consensus_regions.bed"
 CISTARGET_SCRIPT_DIR="${SCRIPT_DIR}/scenicplus/create_cisTarget_databases"
 TEMP_DIR="${SCENIC_DATA_DIR}/tmp/${CELL_TYPE}_${SAMPLE_NAME}_tmp"
 QC_DIR="${OUTPUT_DIR}/qc"
 
 PYCISTOPIC_PROJECT_DIR="${SCRIPT_DIR}/pycisTopic"
-PYCISTOPIC_SRC_DIR="${PYCISTOPIC_PROJECT_DIR}/src"
 
 MOTIF_COLLECTION_DIR="${SCENIC_DATA_DIR}/aertslab_motif_colleciton"
 MOTIF_DATABASE_DIR="${MOTIF_COLLECTION_DIR}/v10nr_clust_public/snapshots"
@@ -69,7 +68,10 @@ if [ $SPECIES == "mouse" ]; then
     BLACKLIST="${SCRIPT_DIR}/pycisTopic/blacklist/mm10-blacklist.v2.bed"
 fi
 
-CONFIG_PATH="${OUTPUT_DIR}/config/${CELL_TYPE}_${SAMPLE_NAME}_config.yaml"
+CONFIG_PATH="${SCRIPT_DIR}/scenicplus/scplus_pipeline/Snakemake/config/${CELL_TYPE}_${SAMPLE_NAME}_config.yaml"
+SNAKEFILE="${SCRIPT_DIR}/scenicplus/scplus_pipeline/Snakemake/workflow/Snakefile"
+mkdir -p "$(dirname "$CONFIG_PATH")"
+mkdir -p "$(dirname "$SNAKEFILE")"
 
 echo "Input files:"
 echo "    RNA Data File: $RNA_FILE"
@@ -216,35 +218,35 @@ install_scenic_plus() {
 }
 
 
-install_pycistopic() {
-    echo ""
-    echo "[INFO] Checking that pycisTopic is installed"
-    local repo_dir="${PYCISTOPIC_PROJECT_DIR}"
-    local logf="${LOG_DIR}/install_pycistopic.log"
+# install_pycistopic() {
+#     echo ""
+#     echo "[INFO] Checking that pycisTopic is installed"
+#     local repo_dir="${PYCISTOPIC_PROJECT_DIR}"
+#     local logf="${LOG_DIR}/install_pycistopic.log"
 
-    if [[ ! -d "$repo_dir" ]]; then
-        echo "    - pycisTopic directory not found, installing..."
-        # make sure log directory exists
-        mkdir -p "$(dirname "$logf")"
+#     if [[ ! -d "$repo_dir" ]]; then
+#         echo "    - pycisTopic directory not found, installing..."
+#         # make sure log directory exists
+#         mkdir -p "$(dirname "$logf")"
 
-        # run both clone and install, capturing all output
-        {
-            echo "---- Cloning pycisTopic ----"
-            git clone --branch pycistopic_v3 --single-branch https://github.com/aertslab/pycisTopic.git "$repo_dir"
-            echo "---- Installing pycisTopic ----"
-            pip install -e "$repo_dir"
-        } > "$logf" 2>&1
+#         # run both clone and install, capturing all output
+#         {
+#             echo "---- Cloning pycisTopic ----"
+#             git clone https://github.com/aertslab/pycisTopic.git "$repo_dir"
+#             echo "---- Installing pycisTopic ----"
+#             pip install -e "$repo_dir"
+#         } > "$logf" 2>&1
 
-        if [[ $? -ne 0 ]]; then
-            echo "[ERROR] pycisTopic install failed, see $logf"
-            exit 1
-        else
-            echo "    - pycisTopic installed; log in $logf"
-        fi
-    else
-        echo "    - pycisTopic directory exists"
-    fi
-}
+#         if [[ $? -ne 0 ]]; then
+#             echo "[ERROR] pycisTopic install failed, see $logf"
+#             exit 1
+#         else
+#             echo "    - pycisTopic installed; log in $logf"
+#         fi
+#     else
+#         echo "    - pycisTopic directory exists"
+#     fi
+# }
 
 add_pycistopic_to_path(){
     echo ""
@@ -290,15 +292,6 @@ EOF
         echo "    - Python package '$pkg' is already installed"
     fi
 }
-
-check_python_deps() {
-    echo ""
-    echo "[INFO] Checking python package requirements"
-    local pkgs=(ruamel.yaml requests numpy pandas scanpy mudata)
-    for p in "${pkgs[@]}"; do
-        ensure_python_pkg "$p"
-    done
-} 
 
 # Function to check if a directory exists, and create it if it doesn't
 check_or_create_dir() {
@@ -539,9 +532,8 @@ determine_num_cpus
 activate_conda_env
 
 install_scenic_plus
-install_pycistopic
+# install_pycistopic
 add_pycistopic_to_path
-check_python_deps 
 
 echo ""
 echo "[INFO] Checking required directories and files"
@@ -593,36 +585,33 @@ echo "===== CHECKS COMPLETE ====="
 #     --blacklist "${BLACKLIST}" \
 #     --chromsize_file_path "${CHROMSIZES}";
 
-echo "Step 3: Getting Transcription Start Site data"
-/usr/bin/time -v python3 -m pycisTopic.cli.pycistopic tss get_tss \
-    --output "${QC_DIR}/tss.bed" \
-    --name "${PYCISTOPIC_SPECIES}" \
-    --to-chrom-source ucsc \
-    --ucsc "${PYCISTOPIC_SPECIES_CODE}" > "${LOG_DIR}/Step 3: Getting Transcription Start Site data.log" 2>&1;
+# echo "Step 3: Getting Transcription Start Site data"
+# /usr/bin/time -v python3 -m pycisTopic.cli.pycistopic tss get_tss \
+#     --output "${QC_DIR}/tss.bed" \
+#     --name "${PYCISTOPIC_SPECIES}" \
+#     --to-chrom-source ucsc \
+#     --ucsc "${PYCISTOPIC_SPECIES_CODE}" > "${LOG_DIR}/Step 3: Getting Transcription Start Site data.log" 2>&1;
 
 module load bedtools/2.31.0
-run_bash_step "Step 4: Prepare fasta from consensus regions" \
-    "${CISTARGET_SCRIPT_DIR}/create_fasta_with_padded_bg_from_bed.sh" \
-    "${GENOME_FASTA}" \
-    "${CHROMSIZES}" \
-    "${REGION_BED}" \
-    "${FASTA_FILE}" \
-    1000 \
-    yes;
+# run_bash_step "Step 4: Prepare fasta from consensus regions" \
+#     "${CISTARGET_SCRIPT_DIR}/create_fasta_with_padded_bg_from_bed.sh" \
+#     "${GENOME_FASTA}" \
+#     "${CHROMSIZES}" \
+#     "${REGION_BED}" \
+#     "${FASTA_FILE}" \
+#     1000 \
+#     yes;
 
 echo "Step 6: Run SCENIC+ snakemake"
-SNAKEFILE="${SCRIPT_DIR}/scplus_pipeline/Snakemake/workflow/Snakefile"
-
-
 echo "    Running snakemake"
 
-cd "${SCRIPT_DIR}/scplus_pipeline/Snakemake"
+cd "${SCRIPT_DIR}/scenicplus/scplus_pipeline/Snakemake"
 /usr/bin/time -v snakemake \
     --nolock \
     --cores ${NUM_CPU} \
     --snakefile $SNAKEFILE \
     --latency-wait 600 \
-    --configfile $NEW_CONFIG_PATH \
+    --configfile $CONFIG_PATH \
     > "${LOG_DIR}/Step 6: Snakemake.log" 2>&1;
 
 echo "Done!"
