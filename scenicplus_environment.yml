@@ -68,7 +68,7 @@ dependencies:
   - ruamel=1.0=py311h38be061_9
   - ruamel.yaml=0.18.10=py311h9ecbd09_0
   - ruamel.yaml.clib=0.2.8=py311h9ecbd09_1
-  - setuptools=75.1.0=pyhd8ed1ab_0
+  - setuptools==79.0.1
   - six=1.16.0=pyh6c4a22f_0
   - tabix=1.11=hdfd78af_0
   - tk=8.6.13=noxft_h4845f30_101

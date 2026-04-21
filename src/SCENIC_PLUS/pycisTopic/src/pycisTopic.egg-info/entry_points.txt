@@ -1,0 +1,2 @@
+[console_scripts]
+pycistopic = pycisTopic.cli.pycistopic:main

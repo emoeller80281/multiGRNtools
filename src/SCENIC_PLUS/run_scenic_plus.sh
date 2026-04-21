@@ -115,7 +115,7 @@ determine_num_cpus() {
                 [16-31]) IGNORED_CPUS=2 ;; # Reserve 2 CPUs for <=31 cores
                 *) IGNORED_CPUS=4 ;;       # Reserve 4 CPUs for >=32 cores
             esac
-            TEST_SCENIC_PLUS/run_multiple_scenic_plus_jobs.sh=$((TOTAL_CPUS - IGNORED_CPUS))
+            NUM_CPU=$((TOTAL_CPUS - IGNORED_CPUS))
             echo "    - Running locally. Detected $TOTAL_CPUS CPUs, reserving $IGNORED_CPUS for system tasks. Using $NUM_CPU CPUs."
         else
             NUM_CPU=1  # Fallback
@@ -192,23 +192,40 @@ install_scenic_plus() {
     local logf="${LOG_DIR}/install_scenic_plus.log"
 
     local is_installed=1
+    local cli_available=1
     if python3 -c "import scenicplus" 2>/dev/null; then
         is_installed=0
     fi
+    if command -v scenicplus >/dev/null 2>&1; then
+        cli_available=0
+    fi
 
-    if [[ $is_installed -ne 0 || ! -d "$repo_dir" ]]; then
-        echo "    - scenicplus not found in Python or directory missing, installing..."
+        local submodule_dir="${repo_dir}/src/scenicplus"
+        local submodule_cli="${submodule_dir}/cli/scenicplus.py"
+        if [[ $is_installed -ne 0 || $cli_available -ne 0 || ! -d "$repo_dir" || ! -f "$submodule_cli" ]]; then
+            echo "    - scenicplus Python module and/or CLI not available; preparing local install..."
         mkdir -p "$(dirname "$logf")"
 
         {
-            echo "---- Cloning scenicplus ----"
-            git clone https://github.com/emoeller80281/SCENIC_PLUS.git "$repo_dir"
-            echo "---- Initializing git submodules ----"
-            cd "$repo_dir"
-            git submodule update --init --recursive
-            cd - > /dev/null
-            echo "---- Installing scenicplus package ----"
-            pip install -e "$repo_dir" --no-cache-dir
+                if [[ -d "$repo_dir" && ! -d "$repo_dir/.git" ]]; then
+                    echo "---- Existing non-git directory found at $repo_dir ----"
+                    echo "---- Refusing to overwrite; please remove/rename this directory ----"
+                    exit 1
+                fi
+
+                if [[ ! -d "$repo_dir" ]]; then
+                    echo "---- Cloning scenicplus ----"
+                    git clone --recurse-submodules https://github.com/emoeller80281/SCENIC_PLUS.git "$repo_dir"
+                fi
+
+                if [[ ! -f "$submodule_cli" ]]; then
+                    echo "---- Initializing scenicplus submodule (one-time setup) ----"
+                    git -C "$repo_dir" submodule update --init --recursive src/scenicplus
+                fi
+
+                echo "---- Installing local scenicplus package (editable) ----"
+                pip install -e "$repo_dir" --no-cache-dir
+                hash -r
         } > "$logf" 2>&1
 
         if [[ $? -ne 0 ]]; then
@@ -218,7 +235,56 @@ install_scenic_plus() {
             echo "    - scenicplus installed; logs in $logf"
         fi
     else
-        echo "    - scenicplus is already installed and directory exists"
+            echo "    - scenicplus Python module, CLI, and local submodule are present"
+    fi
+
+    if ! python3 -c "import scenicplus" 2>/dev/null; then
+        echo "[ERROR] scenicplus Python module is still not importable after install. See $logf"
+        exit 1
+    fi
+
+    if ! python3 -c "import pycistarget" 2>/dev/null; then
+        echo "    - pycistarget is missing; installing from upstream git"
+        if ! pip install --no-cache-dir "pycistarget @ git+https://github.com/aertslab/pycistarget" >> "$logf" 2>&1; then
+            echo "[ERROR] Failed to install pycistarget from git. See $logf"
+            exit 1
+        fi
+    fi
+
+    local pycistopic_local_dir="${PYCISTOPIC_PROJECT_DIR}"
+    if [[ ! -d "$pycistopic_local_dir" ]]; then
+        echo "[ERROR] Local pycisTopic directory not found: $pycistopic_local_dir"
+        exit 1
+    fi
+
+    # Prefer the local pycisTopic checkout to keep behavior reproducible.
+    if ! python3 -c "import pycistopic" 2>/dev/null; then
+        echo "    - pycisTopic is missing; installing local editable package"
+        if ! pip install -e "$pycistopic_local_dir" --no-cache-dir >> "$logf" 2>&1; then
+            echo "[ERROR] Failed to install local pycisTopic from $pycistopic_local_dir. See $logf"
+            exit 1
+        fi
+    else
+        # If pycisTopic imports but is not from the local checkout, reinstall local editable.
+        if ! python3 - <<EOF >/dev/null 2>&1
+import os
+import pycistopic
+module_path = os.path.realpath(getattr(pycistopic, "__file__", ""))
+local_root = os.path.realpath("${pycistopic_local_dir}")
+raise SystemExit(0 if module_path.startswith(local_root) else 1)
+EOF
+        then
+            echo "    - pycisTopic is not using local checkout; reinstalling local editable package"
+            if ! pip install -e "$pycistopic_local_dir" --no-cache-dir >> "$logf" 2>&1; then
+                echo "[ERROR] Failed to switch pycisTopic to local editable install. See $logf"
+                exit 1
+            fi
+        fi
+    fi
+
+    if ! command -v scenicplus >/dev/null 2>&1; then
+        echo "[ERROR] scenicplus CLI is still not available on PATH after install. See $logf"
+        exit 1
     fi
 }
 
@@ -258,9 +324,9 @@ add_pycistopic_to_path(){
     echo "[INFO] Adding pycisTopic to PATH"
     # Add the local pycisTopic to the python path so it is recognized as a module
     if [ -z "${PYTHONPATH+x}" ]; then
-        export PYTHONPATH="${SCRIPT_DIR}/pycisTopic/src"
+        export PYTHONPATH="${PYCISTOPIC_PROJECT_DIR}/src"
     else
-        export PYTHONPATH="${PYTHONPATH}:${SCRIPT_DIR}/pycisTopic/src"
+        export PYTHONPATH="${PYTHONPATH}:${PYCISTOPIC_PROJECT_DIR}/src"
     fi
 
     if [ -z "${LD_LIBRARY_PATH+x}" ]; then
@@ -609,6 +675,17 @@ module load bedtools/2.31.0
 
 echo "Step 6: Run SCENIC+ snakemake"
 echo "    Running snakemake"
+
+echo "    Verifying scenicplus CLI availability"
+if ! command -v scenicplus >/dev/null 2>&1; then
+    echo "[ERROR] scenicplus command not found on PATH before Snakemake execution"
+    exit 1
+fi
+echo "    - scenicplus executable: $(command -v scenicplus)"
+if ! scenicplus --help > "${LOG_DIR}/scenicplus_cli_check.log" 2>&1; then
+    echo "[ERROR] scenicplus executable is present but not runnable; see ${LOG_DIR}/scenicplus_cli_check.log"
+    exit 1
+fi
 
 cd "${SCRIPT_DIR}/scenicplus/scplus_pipeline/Snakemake"
 /usr/bin/time -v snakemake \
