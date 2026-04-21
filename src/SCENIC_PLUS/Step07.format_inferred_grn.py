@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import mudata
 import pandas as pd
 import argparse
@@ -19,19 +21,6 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help="Path to the scplusmdata.h5mu inferred GRN file from the SCENIC+ snakemake pipeline"
     )
-    parser.add_argument(
-        "--cell_type",
-        type=str,
-        required=True,
-        help="Cell type analyzed, used for naming the output file"
-    )
-    parser.add_argument(
-        "--sample_name",
-        type=str,
-        required=True,
-        help="Name of the sample being processed"
-    )
-
     args = parser.parse_args()
     
     return args
@@ -50,6 +39,7 @@ def main():
     inferred_grn_data["Score"] = inferred_grn_data["importance_x_abs_rho"]
 
     subset_inferred_grn = pd.DataFrame(inferred_grn_data[["Source", "Target", "Score"]])
+    Path(output_file_path).parent.mkdir(parents=True, exist_ok=True)
 
     subset_inferred_grn.to_csv(output_file_path, sep="\t", header=True, index=False)
 

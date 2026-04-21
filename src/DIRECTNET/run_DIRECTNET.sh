@@ -22,8 +22,19 @@ if [[ -n "${SPECIES:-}" ]]; then
 fi
 
 ## ── modules ───────────────────────────────────────────
-source activate celloracle_env
+source activate directnet_env
 module load R/4.3.2
+
+if [[ -z "$CONDA_PREFIX" ]]; then
+  echo "ERROR: conda environment activation failed (CONDA_PREFIX is empty)"
+  exit 1
+fi
+
+PYTHON_BIN="$CONDA_PREFIX/bin/python"
+if [[ ! -x "$PYTHON_BIN" ]]; then
+  echo "ERROR: Python executable not found in conda env: $PYTHON_BIN"
+  exit 1
+fi
 
 ## Provide newer conda libstdc++ for user R packages compiled with newer ABI.
 if [[ -z "$CONDA_PREFIX" ]]; then

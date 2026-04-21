@@ -652,34 +652,34 @@ cp -f "$CHROMSIZES" "${OUTPUT_DIR}/chromsizes.tsv"
 echo ""
 echo "===== CHECKS COMPLETE ====="
 
-# run_python_step "Step 1: RNA preprocessing" "${SCRIPT_DIR}/Step01.RNA_preprocessing.py" \
-#     --rna_file "${RNA_FILE}" \
-#     --output_dir "${OUTPUT_DIR}" \
+run_python_step "Step 1: RNA preprocessing" "${SCRIPT_DIR}/Step01.RNA_preprocessing.py" \
+    --rna_file "${RNA_FILE}" \
+    --output_dir "${OUTPUT_DIR}" \
 
 
-# run_python_step "Step 2: ATAC preprocessing" "${SCRIPT_DIR}/Step02.ATAC_preprocessing.py" \
-#     --atac_file "${ATAC_FILE}" \
-#     --output_dir "${OUTPUT_DIR}" \
-#     --tmp_dir "${TEMP_DIR}" \
-#     --blacklist "${BLACKLIST}" \
-#     --chromsize_file_path "${CHROMSIZES}";
+run_python_step "Step 2: ATAC preprocessing" "${SCRIPT_DIR}/Step02.ATAC_preprocessing.py" \
+    --atac_file "${ATAC_FILE}" \
+    --output_dir "${OUTPUT_DIR}" \
+    --tmp_dir "${TEMP_DIR}" \
+    --blacklist "${BLACKLIST}" \
+    --chromsize_file_path "${CHROMSIZES}";
 
-# echo "Step 3: Getting Transcription Start Site data"
-# /usr/bin/time -v python3 -m pycisTopic.cli.pycistopic tss get_tss \
-#     --output "${QC_DIR}/tss.bed" \
-#     --name "${PYCISTOPIC_SPECIES}" \
-#     --to-chrom-source ucsc \
-#     --ucsc "${PYCISTOPIC_SPECIES_CODE}" > "${LOG_DIR}/Step 3: Getting Transcription Start Site data.log" 2>&1;
+echo "Step 3: Getting Transcription Start Site data"
+/usr/bin/time -v python3 -m pycisTopic.cli.pycistopic tss get_tss \
+    --output "${QC_DIR}/tss.bed" \
+    --name "${PYCISTOPIC_SPECIES}" \
+    --to-chrom-source ucsc \
+    --ucsc "${PYCISTOPIC_SPECIES_CODE}" > "${LOG_DIR}/Step 3: Getting Transcription Start Site data.log" 2>&1;
 
 module load bedtools/2.31.0
-# run_bash_step "Step 4: Prepare fasta from consensus regions" \
-#     "${CISTARGET_SCRIPT_DIR}/create_fasta_with_padded_bg_from_bed.sh" \
-#     "${GENOME_FASTA}" \
-#     "${CHROMSIZES}" \
-#     "${REGION_BED}" \
-#     "${FASTA_FILE}" \
-#     1000 \
-#     yes;
+run_bash_step "Step 4: Prepare fasta from consensus regions" \
+    "${CISTARGET_SCRIPT_DIR}/create_fasta_with_padded_bg_from_bed.sh" \
+    "${GENOME_FASTA}" \
+    "${CHROMSIZES}" \
+    "${REGION_BED}" \
+    "${FASTA_FILE}" \
+    1000 \
+    yes;
 
 echo "Step 6: Run SCENIC+ snakemake"
 echo "    Running snakemake"
@@ -715,7 +715,7 @@ if [ -f "$OUTPUT_DIR/scplusmdata.h5mu" ]; then
     run_python_step "Step 7: Format Inferred GRN" \
         "${SCRIPT_DIR}/Step07.format_inferred_grn.py" \
             --output_file_path "${FORMATTED_GRN_FILE}" \
-            --inferred_grn_file "${OUTPUT_DIR}/scplusmdata.h5mu" \
+            --inferred_grn_file "${OUTPUT_DIR}/scplusmdata.h5mu" 
     echo "    DONE! Formatted GRN saved as '${FORMATTED_GRN_FILE}'"
 else
     echo "    ERROR! formatting inferred GRN 'scplusmdata.h5mu': File not found in the output directory"
