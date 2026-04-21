@@ -1,35 +1,35 @@
 #!/bin/bash -l
 #SBATCH --job-name="submit_multiple_scmultipredict_jobs"
-#SBATCH --output=/dev/null
-#SBATCH --error=/dev/null
+#SBATCH --output=/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/LOGS/run_tools/submit_multiple_scmultipredict_jobs_%A_%a.out
+#SBATCH --error=/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/LOGS/run_tools/submit_multiple_scmultipredict_jobs_%A_%a.err
 #SBATCH --time=08:00:00
 #SBATCH -p compute
 #SBATCH --nodes=1
 #SBATCH -c 1
 #SBATCH --mem=4G
-#SBATCH --array=0-8%10
+#SBATCH --array=0%10
 
 # ===== METHOD SELECTION =====
 RUN_CELLORACLE=false
-RUN_DIRECTNET=false
+RUN_DIRECTNET=true
 RUN_LINGER=false
-RUN_SCENIC_PLUS=true
+RUN_SCENIC_PLUS=false
 
 # ===== SAMPLE CONFIGURATION =====
 EXPERIMENT_LIST=(
-    "mESC|E7.5_rep1|mouse|mESC"
-    "mESC|E7.5_rep2|mouse|mESC"
-    "mESC|E8.5_rep1|mouse|mESC"
-    "mESC|E8.5_rep2|mouse|mESC"
+    # "mESC|E7.5_rep1|mouse|mESC"
+    # "mESC|E7.5_rep2|mouse|mESC"
+    # "mESC|E8.5_rep1|mouse|mESC"
+    # "mESC|E8.5_rep2|mouse|mESC"
 
-    # "Macrophage|buffer_1|human|Macrophage"
-    "Macrophage|buffer_2|human|Macrophage"
-    "Macrophage|buffer_3|human|Macrophage"
-    "Macrophage|buffer_4|human|Macrophage"
+    "Macrophage|buffer_1|human|Macrophage"
+    # "Macrophage|buffer_2|human|Macrophage"
+    # "Macrophage|buffer_3|human|Macrophage"
+    # "Macrophage|buffer_4|human|Macrophage"
 
-    "iPSC|WT_D13_rep1|human|iPSC"
+    # "iPSC|WT_D13_rep1|human|iPSC"
 
-    "K562|sample_1|human|K562"
+    # "K562|sample_1|human|K562"
 )
 
 # ===== PATH CONFIGURATION =====
@@ -93,19 +93,19 @@ if [ "$RUN_CELLORACLE" = true ]; then
         "${PROJECT_DIR}/src/Celloracle/run_CellOracle.sh"
 fi
 
-    if [ "$RUN_DIRECTNET" = true ]; then
-        echo "Submitting DIRECTNET job for ${CELL_TYPE} - ${SAMPLE_NAME} (Task ID: ${ARRAY_TASK_ID})"
+if [ "$RUN_DIRECTNET" = true ]; then
+    echo "Submitting DIRECTNET job for ${CELL_TYPE} - ${SAMPLE_NAME} (Task ID: ${ARRAY_TASK_ID})"
 
-        log_dir="${PROJECT_DIR}/LOGS/DIRECTNET/${CELL_TYPE}/${SAMPLE_NAME}"
-        mkdir -p "${log_dir}"
+    log_dir="${PROJECT_DIR}/LOGS/DIRECTNET/${CELL_TYPE}/${SAMPLE_NAME}"
+    mkdir -p "${log_dir}"
 
-        sbatch \
-        --export=PROJECT_DIR="$PROJECT_DIR",RESULTS_DIR="$RESULTS_DIR",REFERENCE_GENOME_DIR="$REFERENCE_GENOME_DIR",CELL_TYPE="$CELL_TYPE",SAMPLE_NAME="$SAMPLE_NAME",SPECIES="$SPECIES",RNA_FILE="$rna_file",ATAC_FILE="$atac_file" \
-        --job-name="SCMULTI_PREDICT_DIRECTNET_${CELL_TYPE}_${SAMPLE_NAME}" \
-        --output=${log_dir}/DIRECTNET.log \
-        --error=${log_dir}/DIRECTNET.err \
-        "${PROJECT_DIR}/src/DIRECTNET/run_DIRECTNET.sh"
-    fi
+    sbatch \
+    --export=PROJECT_DIR="$PROJECT_DIR",RESULTS_DIR="$RESULTS_DIR",REFERENCE_GENOME_DIR="$REFERENCE_GENOME_DIR",CELL_TYPE="$CELL_TYPE",SAMPLE_NAME="$SAMPLE_NAME",SPECIES="$SPECIES",RNA_FILE="$rna_file",ATAC_FILE="$atac_file" \
+    --job-name="SCMULTI_PREDICT_DIRECTNET_${CELL_TYPE}_${SAMPLE_NAME}" \
+    --output=${log_dir}/DIRECTNET.log \
+    --error=${log_dir}/DIRECTNET.err \
+    "${PROJECT_DIR}/src/DIRECTNET/run_DIRECTNET.sh"
+fi
 
 if [ "$RUN_LINGER" = true ]; then
     echo "Submitting LINGER job for ${CELL_TYPE} - ${SAMPLE_NAME} (Task ID: ${ARRAY_TASK_ID})"

@@ -5,8 +5,8 @@
 #SBATCH --time=12:00:00
 #SBATCH -p memory
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=16
-#SBATCH --mem-per-cpu=16G
+#SBATCH --cpus-per-task=12
+#SBATCH --mem=128G
 
 GENOME="${GENOME:-Human}"
 
@@ -160,7 +160,7 @@ run_directnet() {
     echo "  Genome ref: $GENOME_REF"
     echo "  Start     : $(date)"
 
-    srun /usr/bin/time -v Rscript "${SCRIPT_DIR}/DIRECTNET.R" \
+    /usr/bin/time -v Rscript "${SCRIPT_DIR}/DIRECTNET.R" \
       "$rna_file" \
       "$atac_file" \
       "$out_dir" \
@@ -173,7 +173,7 @@ run_directnet() {
 
     echo ""
     echo "  Done: $(date)"
-  } > "$out_dir/run.log" 2>&1 \
+  } > "$LOG_DIR/DIRECTNET.log" 2>&1 \
     && echo "  Done"
 }
 
