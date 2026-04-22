@@ -34,6 +34,11 @@ PYCISTOPIC_PROJECT_DIR="${SCRIPT_DIR}/pycisTopic"
 MOTIF_COLLECTION_DIR="${SCENIC_DATA_DIR}/aertslab_motif_colleciton"
 MOTIF_DATABASE_DIR="${MOTIF_COLLECTION_DIR}/v10nr_clust_public/snapshots"
 
+# SCENIC+ likes to delete the chromsizes.tsv and genome_annotation.tsv files if it can't
+# connect to ENSEMBL, so I am including a copy for hg38 and mm10. If they are present when running
+# snakemake, then they won't be deleted.
+CHROMSIZE_AND_GENOME_ANNOT_DIR="${SCRIPT_DIR}/chromsize_and_genome_annot"
+
 if [ $SPECIES == "human" ]; then
     ORGANISM_DIR="${SCENIC_DATA_DIR}/organism_genome_files/human"
     ENSEMBL_SPECIES="hsapiens"
@@ -49,6 +54,9 @@ if [ $SPECIES == "human" ]; then
     CISTARGET_RANKINGS_PRECOMP="hg38_screen_v10_clust.regions_vs_motifs.rankings.feather"
     CISTARGET_SCORES_PRECOMP="hg38_screen_v10_clust.regions_vs_motifs.scores.feather"
     BLACKLIST="${SCRIPT_DIR}/pycisTopic/blacklist/hg38-blacklist.v2.bed"
+
+    SCENIC_CHROM_SIZES="${CHROMSIZE_AND_GENOME_ANNOT_DIR}/hg38/chromsizes.tsv"
+    SCENIC_GENE_ANNOT="${CHROMSIZE_AND_GENOME_ANNOT_DIR}/hg38/genome_annotation.tsv"
 fi
 
 if [ $SPECIES == "mouse" ]; then
@@ -66,6 +74,9 @@ if [ $SPECIES == "mouse" ]; then
     CISTARGET_RANKINGS_PRECOMP="mm10_screen_v10_clust.regions_vs_motifs.rankings.feather"
     CISTARGET_SCORES_PRECOMP="mm10_screen_v10_clust.regions_vs_motifs.scores.feather"
     BLACKLIST="${SCRIPT_DIR}/pycisTopic/blacklist/mm10-blacklist.v2.bed"
+
+    SCENIC_CHROM_SIZES="${CHROMSIZE_AND_GENOME_ANNOT_DIR}/mm10/chromsizes.tsv"
+    SCENIC_GENE_ANNOT="${CHROMSIZE_AND_GENOME_ANNOT_DIR}/mm10/genome_annotation.tsv"
 fi
 
 CONFIG_PATH="${SCRIPT_DIR}/scenicplus/scplus_pipeline/Snakemake/config/${CELL_TYPE}_${SAMPLE_NAME}_config.yaml"
@@ -640,14 +651,13 @@ check_organism_genome_files
 
 check_file_exists "$BLACKLIST"
 check_file_exists "$GENOME_FASTA"
-check_file_exists "$CHROMSIZES"
-
-# Make CHROMSIZES available to Snakemake shell rules for fallback handling.
-export CHROMSIZES
+check_file_exists "$SCENIC_CHROM_SIZES"
+check_file_exists "$SCENIC_GENE_ANNOT"
 
 # Seed chromsizes in the output directory so downstream steps have a valid file
 # even when automatic genome lookup cannot resolve assembly sizes.
-cp -f "$CHROMSIZES" "${OUTPUT_DIR}/chromsizes.tsv"
+cp -f "$SCENIC_CHROM_SIZES" "${OUTPUT_DIR}/chromsizes.tsv"
+cp -f "$SCENIC_GENE_ANNOT" "${OUTPUT_DIR}/genome_annotation.tsv"
 
 echo ""
 echo "===== CHECKS COMPLETE ====="
@@ -694,6 +704,8 @@ if ! scenicplus --help > "${LOG_DIR}/scenicplus_cli_check.log" 2>&1; then
     echo "[ERROR] scenicplus executable is present but not runnable; see ${LOG_DIR}/scenicplus_cli_check.log"
     exit 1
 fi
+
+
 
 cd "${SCRIPT_DIR}/scenicplus/scplus_pipeline/Snakemake"
 /usr/bin/time -v snakemake \

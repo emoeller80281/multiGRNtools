@@ -173,7 +173,7 @@ run_directnet() {
 
     echo ""
     echo "  Done: $(date)"
-  } > "$LOG_DIR/DIRECTNET.log" 2>&1 \
+  } > "$LOG_DIR/DIRECTNET_run.log" 2>&1 \
     && echo "  Done"
 }
 

@@ -1,28 +1,28 @@
 #!/bin/bash -l
 #SBATCH --job-name="submit_multiple_scmultipredict_jobs"
-#SBATCH --output=/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/LOGS/run_tools/submit_multiple_scmultipredict_jobs_%A_%a.out
-#SBATCH --error=/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/LOGS/run_tools/submit_multiple_scmultipredict_jobs_%A_%a.err
+#SBATCH --output=/dev/null
+#SBATCH --error=/dev/null
 #SBATCH --time=08:00:00
 #SBATCH -p compute
 #SBATCH --nodes=1
 #SBATCH -c 1
 #SBATCH --mem=4G
-#SBATCH --array=0%10
+#SBATCH --array=2%10
 
 # ===== METHOD SELECTION =====
 RUN_CELLORACLE=false
-RUN_DIRECTNET=true
+RUN_DIRECTNET=false
 RUN_LINGER=false
-RUN_SCENIC_PLUS=false
+RUN_SCENIC_PLUS=true
 
 # ===== SAMPLE CONFIGURATION =====
 EXPERIMENT_LIST=(
-    # "mESC|E7.5_rep1|mouse|mESC"
-    # "mESC|E7.5_rep2|mouse|mESC"
+    "mESC|E7.5_rep1|mouse|mESC"
+    "mESC|E7.5_rep2|mouse|mESC"
     # "mESC|E8.5_rep1|mouse|mESC"
-    # "mESC|E8.5_rep2|mouse|mESC"
+    "mESC|E8.5_rep2|mouse|mESC"
 
-    "Macrophage|buffer_1|human|Macrophage"
+    # "Macrophage|buffer_1|human|Macrophage"
     # "Macrophage|buffer_2|human|Macrophage"
     # "Macrophage|buffer_3|human|Macrophage"
     # "Macrophage|buffer_4|human|Macrophage"
