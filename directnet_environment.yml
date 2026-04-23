@@ -2,6 +2,7 @@ name: directnet_env
 channels:
   - conda-forge
   - bioconda
+  - anaconda
 dependencies:
   - r-base=4.3
   - r-essentials
@@ -15,3 +16,8 @@ dependencies:
   - openssl
   - zlib
   - hdf5
+  - cmake
+  - xz
+  - pkg-config
+  - icu
+  - abseil-cpp

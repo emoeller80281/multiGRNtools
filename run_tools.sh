@@ -7,22 +7,22 @@
 #SBATCH --nodes=1
 #SBATCH -c 1
 #SBATCH --mem=4G
-#SBATCH --array=2%10
+#SBATCH --array=0%10
 
 # ===== METHOD SELECTION =====
 RUN_CELLORACLE=false
-RUN_DIRECTNET=false
+RUN_DIRECTNET=true
 RUN_LINGER=false
-RUN_SCENIC_PLUS=true
+RUN_SCENIC_PLUS=false
 
 # ===== SAMPLE CONFIGURATION =====
 EXPERIMENT_LIST=(
-    "mESC|E7.5_rep1|mouse|mESC"
-    "mESC|E7.5_rep2|mouse|mESC"
+    # "mESC|E7.5_rep1|mouse|mESC"
+    # "mESC|E7.5_rep2|mouse|mESC"
     # "mESC|E8.5_rep1|mouse|mESC"
-    "mESC|E8.5_rep2|mouse|mESC"
+    # "mESC|E8.5_rep2|mouse|mESC"
 
-    # "Macrophage|buffer_1|human|Macrophage"
+    "Macrophage|buffer_1|human|Macrophage"
     # "Macrophage|buffer_2|human|Macrophage"
     # "Macrophage|buffer_3|human|Macrophage"
     # "Macrophage|buffer_4|human|Macrophage"

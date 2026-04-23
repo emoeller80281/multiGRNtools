@@ -22,32 +22,31 @@ if [[ -n "${SPECIES:-}" ]]; then
 fi
 
 ## ── modules ───────────────────────────────────────────
-source activate directnet_env
-module load R/4.3.2
+# source activate directnet_env
+module load R
 
-if [[ -z "$CONDA_PREFIX" ]]; then
-  echo "ERROR: conda environment activation failed (CONDA_PREFIX is empty)"
-  exit 1
-fi
+# if [[ -z "$CONDA_PREFIX" ]]; then
+#   echo "ERROR: conda environment activation failed (CONDA_PREFIX is empty)"
+#   exit 1
+# fi
 
-PYTHON_BIN="$CONDA_PREFIX/bin/python"
-if [[ ! -x "$PYTHON_BIN" ]]; then
-  echo "ERROR: Python executable not found in conda env: $PYTHON_BIN"
-  exit 1
-fi
+# PYTHON_BIN="$CONDA_PREFIX/bin/python"
+# if [[ ! -x "$PYTHON_BIN" ]]; then
+#   echo "ERROR: Python executable not found in conda env: $PYTHON_BIN"
+#   exit 1
+# fi
 
 ## Provide newer conda libstdc++ for user R packages compiled with newer ABI.
-if [[ -z "$CONDA_PREFIX" ]]; then
-  echo "ERROR: conda environment activation failed (CONDA_PREFIX is empty)"
-  exit 1
-fi
-export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:${LD_LIBRARY_PATH:-}"
-if [[ -f "$CONDA_PREFIX/lib/libstdc++.so.6" ]]; then
-  export LD_PRELOAD="$CONDA_PREFIX/lib/libstdc++.so.6${LD_PRELOAD:+:$LD_PRELOAD}"
-else
-  echo "ERROR: Expected libstdc++ not found at $CONDA_PREFIX/lib/libstdc++.so.6"
-  exit 1
-fi
+# if [[ -z "$CONDA_PREFIX" ]]; then
+#   echo "ERROR: conda environment activation failed (CONDA_PREFIX is empty)"
+#   exit 1
+# fi
+# export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:${LD_LIBRARY_PATH:-}"
+
+# if [[ ! -f "$CONDA_PREFIX/lib/libstdc++.so.6" ]]; then
+#   echo "ERROR: Expected libstdc++ not found at $CONDA_PREFIX/lib/libstdc++.so.6"
+#   exit 1
+# fi
 
 ## ── Base paths ────────────────────────────────────────────────
 BASE_DIR="${PROJECT_DIR}/src/DIRECTNET"

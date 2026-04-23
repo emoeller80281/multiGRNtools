@@ -8,6 +8,6 @@
 #SBATCH -c 1
 #SBATCH --mem=16G
 
-source activate directnet_env
+source activate R
 
 Rscript src/DIRECTNET/install_directnet.R
