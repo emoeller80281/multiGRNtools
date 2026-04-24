@@ -108,12 +108,17 @@ read_genome_info <- function(path) {
     if (ncol(genome_info) < 4) {
       stop("BED-like TSS file must have at least 4 columns: ", path)
     }
-    colnames(genome_info)[1:4] <- c("chr", "start", "end", "genes")
+    colnames(genome_info)[1:4] <- c("Chrom", "Starts", "Ends", "genes")
   } else {
     genome_info <- read.table(path, header = TRUE, stringsAsFactors = FALSE)
     if (!"genes" %in% colnames(genome_info)) {
       stop("TSS file must contain a 'genes' column: ", path)
     }
+
+    colnames(genome_info) <- sub("^chr$", "Chrom", colnames(genome_info), ignore.case = TRUE)
+    colnames(genome_info) <- sub("^chrom$", "Chrom", colnames(genome_info), ignore.case = TRUE)
+    colnames(genome_info) <- sub("^starts?$", "Starts", colnames(genome_info), ignore.case = TRUE)
+    colnames(genome_info) <- sub("^ends?$", "Ends", colnames(genome_info), ignore.case = TRUE)
   }
 
   genome_info
@@ -121,6 +126,27 @@ read_genome_info <- function(path) {
 
 ## ── Load genome info ──────────────────────────────────────────
 genome.info <- read_genome_info(tss_file)
+required_columns <- c("Chrom", "Starts", "Ends", "genes")
+missing_columns <- setdiff(required_columns, colnames(genome.info))
+if (length(missing_columns) > 0) {
+  stop("TSS file is missing required columns after normalization: ", paste(missing_columns, collapse = ", "))
+}
+
+cat("Checking genome.info...\n")
+
+# Ensure numeric
+genome.info$Starts <- as.numeric(genome.info$Starts)
+genome.info$Ends   <- as.numeric(genome.info$Ends)
+
+cat("NA starts:", sum(is.na(genome.info$Starts)), "\n")
+cat("NA ends  :", sum(is.na(genome.info$Ends)), "\n")
+
+# Which genes have NA coords?
+na_genes <- genome.info$genes[is.na(genome.info$Starts) | is.na(genome.info$Ends)]
+head(na_genes)
+
+genome.info <- genome.info[!is.na(genome.info$Starts) & !is.na(genome.info$Ends), ]
+
 unik        <- !duplicated(genome.info$genes)
 genome.info <- genome.info[unik, ]
 cat("Genome info rows (deduplicated):", nrow(genome.info), "\n")
@@ -138,8 +164,25 @@ pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^MT-")
 
 ## ── Add ATAC assay ────────────────────────────────────────────
 grange.counts <- StringToGRanges(rownames(atac_counts), sep = c(":", "-"))
-grange.use    <- seqnames(grange.counts) %in% standardChromosomes(grange.counts)
-atac_counts   <- atac_counts[as.vector(grange.use), ]
+
+# Remove malformed peaks
+valid_peaks <- 
+  !is.na(start(grange.counts)) &
+  !is.na(end(grange.counts)) &
+  start(grange.counts) < end(grange.counts)
+
+cat("Removing", sum(!valid_peaks), "malformed peaks\n")
+
+grange.counts <- grange.counts[valid_peaks]
+atac_counts   <- atac_counts[valid_peaks, ]
+
+# Keep only standard chromosomes
+grange.use <- as.vector(
+  seqnames(grange.counts) %in% standardChromosomes(grange.counts)
+)
+
+grange.counts <- grange.counts[grange.use]
+atac_counts   <- atac_counts[grange.use, ]
 
 chrom_assay <- CreateChromatinAssay(
   counts     = atac_counts,
@@ -191,10 +234,19 @@ if (inherits(pbmc[["RNA"]], "Assay5")) {
 
 
 ########################
-
 ## ── Run DIRECTNET ─────────────────────────────────────────────
 markers <- row.names(pbmc)
 cat("Running DIRECTNET on", length(markers), "markers...\n")
+
+# Original markers
+all_markers <- row.names(pbmc)
+
+# Keep only genes with valid TSS
+markers <- intersect(all_markers, genome.info$genes)
+
+cat("Total genes:", length(all_markers), "\n")
+cat("Markers with valid TSS:", length(markers), "\n")
+cat("Genes removed:", length(setdiff(all_markers, markers)), "\n")
 
 pbmc <- Run_DIRECT_NET(
   pbmc,

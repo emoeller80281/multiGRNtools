@@ -35,6 +35,7 @@ dependencies:
   - bioconductor-ensdb.mmusculus.v79
   - bioconductor-bsgenome.hsapiens.ucsc.hg38
   - bioconductor-bsgenome.mmusculus.ucsc.mm10
+  - bioconductor-glmgampoi
 
   # Common build/system deps
   - compilers
