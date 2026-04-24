@@ -36,6 +36,7 @@ dependencies:
   - bioconductor-bsgenome.hsapiens.ucsc.hg38
   - bioconductor-bsgenome.mmusculus.ucsc.mm10
   - bioconductor-glmgampoi
+  - bioconductor-jaspar2016
 
   # Common build/system deps
   - compilers

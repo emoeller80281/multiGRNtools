@@ -5,7 +5,7 @@
 #SBATCH --time=12:00:00
 #SBATCH -p memory
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=12
+#SBATCH --cpus-per-task=64
 #SBATCH --mem=128G
 
 GENOME="${GENOME:-Human}"
@@ -114,6 +114,8 @@ fi
 
 SAMPLE_DIR="$(dirname "$RNA_FILE")"
 SAMPLE="$SAMPLE_NAME"
+NUM_THREADS=$SLURM_CPUS_PER_TASK
+
 
 echo "========================================"
 echo "  Genome      : $GENOME"
@@ -132,17 +134,21 @@ echo "  TSS file     : $TSS_FILE"
 echo "  GTF file     : $GTF_FILE"
 echo "========================================"
 
+
 run_directnet() {
   local rna_file="$1"
   local atac_file="$2"
   local out_dir="$3"
   local sample_name="$4"
+  local num_cpus="$5"
 
   echo ""
   echo "     RNA       : $rna_file"
   echo "     ATAC      : $atac_file"
   echo "     Sample    : $sample_name"
   echo "     Out dir   : $out_dir"
+  echo "     Genome ref: $GENOME_REF"
+  echo "     Num CPU   : $NUM_THREADS"
 
   if [[ ! -f "$rna_file" ]]; then echo "  SKIP: RNA file not found : $rna_file"; return; fi
   if [[ ! -f "$atac_file" ]]; then echo "  SKIP: ATAC file not found: $atac_file"; return; fi
@@ -167,6 +173,7 @@ run_directnet() {
       "$SCRIPT_DIR" \
       "$TSS_FILE" \
       "$GTF_FILE" \
+      "$num_cpus" \
       || { echo "  FAILED at DIRECTNET.R"; exit 1; }
 
     echo ""
@@ -179,7 +186,8 @@ run_directnet \
   "$RNA_FILE" \
   "$ATAC_FILE" \
   "$DIRECTNET_RESULTS_DIR" \
-  "$SAMPLE"
+  "$SAMPLE" \
+  "$NUM_THREADS"
 
 echo ""
 echo "========================================"

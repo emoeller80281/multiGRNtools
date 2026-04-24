@@ -28,12 +28,12 @@ options(stringsAsFactors = FALSE)
 ## ── Parse arguments ───────────────────────────────────────────
 args <- commandArgs(trailingOnly = TRUE)
 
-if (length(args) < 8) {
+if (length(args) < 9) {
   stop(paste(
     "Usage: Rscript run_directnet.R",
     "<rna_file> <atac_file> <out_dir>",
     "<sample_name> <genome> <script_dir>",
-    "<tss_file> <gtf_file>"
+    "<tss_file> <gtf_file> <num_cpus>"
   ))
 }
 
@@ -45,6 +45,7 @@ genome      <- args[5]   # "hg38" or "mm10"
 script_dir  <- args[6]   # Directory with reference files
 tss_file    <- args[7]   # Gene TSS path
 gtf_file    <- args[8]   # Gene annotation path
+num_cpus    <- ifelse(length(args) >= 9, args[9], 8)  # Optional: number of CPUs for parallel processing
 
 cat("======================================\n")
 cat("  DIRECTNET run\n")
@@ -56,6 +57,7 @@ cat("  Genome      :", genome,      "\n")
 cat("  Script dir  :", script_dir,  "\n")
 cat("  TSS file    :", tss_file,    "\n")
 cat("  GTF file    :", gtf_file,    "\n")
+cat("  Num CPUs    :", num_cpus,    "\n")
 cat("======================================\n")
 
 ## ── Validate inputs ───────────────────────────────────────────
@@ -248,15 +250,22 @@ cat("Total genes:", length(all_markers), "\n")
 cat("Markers with valid TSS:", length(markers), "\n")
 cat("Genes removed:", length(setdiff(all_markers, markers)), "\n")
 
-pbmc <- Run_DIRECT_NET(
+source(file.path(script_dir, "DIRECTNET_parallel.R"))
+
+pbmc <- Run_DIRECT_NET_parallel(
   pbmc,
-  peakcalling          = FALSE,
-  k_neigh              = 50,
-  atacbinary           = TRUE,
-  max_overlap          = 0.5,
+  peakcalling = FALSE,
+  k_neigh = 50,
+  atacbinary = TRUE,
+  max_overlap = 0.5,
   size_factor_normalize = FALSE,
-  genome.info          = genome.info,
-  focus_markers        = markers
+  genome.info = genome.info,
+  focus_markers = markers,
+  progress_every = 1,
+  n_workers = as.integer(num_cpus),
+  nthread = 1,
+  coordinate_format = "directnet_original",
+  parallel_backend = "mclapply"
 )
 
 direct.net_result <- Misc(pbmc, slot = 'direct.net')
