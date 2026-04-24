@@ -2,22 +2,52 @@ name: directnet_env
 channels:
   - conda-forge
   - bioconda
-  - anaconda
+  - defaults
+
 dependencies:
   - r-base=4.3
-  - r-essentials
   - r-devtools
   - r-remotes
-  - r-data.table
-  - r-tidyverse
-  - r-irkernel
-  - libxml2
-  - libcurl
-  - openssl
-  - zlib
-  - hdf5
+  - r-biocmanager
+  - r-htmltable
+  - r-hmisc
+
+  # CRAN deps
+  - r-htmltable
+  - r-hmisc
+  - r-xgboost
+  - r-signac
+  - r-igraph
+  - r-seurat
+  - r-lme4
+
+  # Bioconductor deps
+  - bioconductor-genomicranges
+  - bioconductor-rtracklayer
+  - bioconductor-gviz
+  - bioconductor-biovizbase
+  - bioconductor-chromvar
+  - bioconductor-motifmatchr
+  - bioconductor-summarizedexperiment
+  - bioconductor-singlecellexperiment
+  - bioconductor-sparsematrixstats
+  - bioconductor-ensdb.hsapiens.v86
+  - bioconductor-ensdb.mmusculus.v79
+  - bioconductor-bsgenome.hsapiens.ucsc.hg38
+  - bioconductor-bsgenome.mmusculus.ucsc.mm10
+
+  # Common build/system deps
+  - compilers
+  - make
   - cmake
-  - xz
   - pkg-config
-  - icu
-  - abseil-cpp
+  - git
+  - gsl
+  - hdf5
+  - udunits2
+  - geos
+  - proj
+  - gdal
+  - libxml2
+  - openssl
+  - curl

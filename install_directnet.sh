@@ -8,8 +8,8 @@
 #SBATCH -c 1
 #SBATCH --mem=16G
 
-# conda activate directnet_env
-module load rstudio
+conda activate directnet_env
+# module load R/4.3.2
 
 ## Provide newer conda libstdc++ for user R packages compiled with newer ABI.
 export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:${LD_LIBRARY_PATH:-}"

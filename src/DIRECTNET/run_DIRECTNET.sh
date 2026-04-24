@@ -22,11 +22,7 @@ if [[ -n "${SPECIES:-}" ]]; then
 fi
 
 ## ── modules ───────────────────────────────────────────
-# source activate directnet_env
-# source /gpfs/Home/kmk7420/.conda/pkgs/conda-24.7.1-py39hf3d152e_0/lib/python3.9/site-packages/conda/shell/etc/profile.d/conda.sh
-# conda activate celloracle_env
-# source /etc/profile.d/modules.sh
-module load R/4.3.2
+source activate directnet_env
 
 if [[ -z "$CONDA_PREFIX" ]]; then
   echo "ERROR: conda environment activation failed (CONDA_PREFIX is empty)"
