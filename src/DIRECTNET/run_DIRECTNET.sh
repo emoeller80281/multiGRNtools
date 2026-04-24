@@ -23,30 +23,33 @@ fi
 
 ## ── modules ───────────────────────────────────────────
 # source activate directnet_env
-module load R
+# source /gpfs/Home/kmk7420/.conda/pkgs/conda-24.7.1-py39hf3d152e_0/lib/python3.9/site-packages/conda/shell/etc/profile.d/conda.sh
+# conda activate celloracle_env
+# source /etc/profile.d/modules.sh
+module load R/4.3.2
 
-# if [[ -z "$CONDA_PREFIX" ]]; then
-#   echo "ERROR: conda environment activation failed (CONDA_PREFIX is empty)"
-#   exit 1
-# fi
+if [[ -z "$CONDA_PREFIX" ]]; then
+  echo "ERROR: conda environment activation failed (CONDA_PREFIX is empty)"
+  exit 1
+fi
 
-# PYTHON_BIN="$CONDA_PREFIX/bin/python"
-# if [[ ! -x "$PYTHON_BIN" ]]; then
-#   echo "ERROR: Python executable not found in conda env: $PYTHON_BIN"
-#   exit 1
-# fi
+PYTHON_BIN="$CONDA_PREFIX/bin/python"
+if [[ ! -x "$PYTHON_BIN" ]]; then
+  echo "ERROR: Python executable not found in conda env: $PYTHON_BIN"
+  exit 1
+fi
 
-## Provide newer conda libstdc++ for user R packages compiled with newer ABI.
-# if [[ -z "$CONDA_PREFIX" ]]; then
-#   echo "ERROR: conda environment activation failed (CONDA_PREFIX is empty)"
-#   exit 1
-# fi
-# export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:${LD_LIBRARY_PATH:-}"
+# Provide newer conda libstdc++ for user R packages compiled with newer ABI.
+if [[ -z "$CONDA_PREFIX" ]]; then
+  echo "ERROR: conda environment activation failed (CONDA_PREFIX is empty)"
+  exit 1
+fi
+export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:${LD_LIBRARY_PATH:-}"
 
-# if [[ ! -f "$CONDA_PREFIX/lib/libstdc++.so.6" ]]; then
-#   echo "ERROR: Expected libstdc++ not found at $CONDA_PREFIX/lib/libstdc++.so.6"
-#   exit 1
-# fi
+if [[ ! -f "$CONDA_PREFIX/lib/libstdc++.so.6" ]]; then
+  echo "ERROR: Expected libstdc++ not found at $CONDA_PREFIX/lib/libstdc++.so.6"
+  exit 1
+fi
 
 ## ── Base paths ────────────────────────────────────────────────
 BASE_DIR="${PROJECT_DIR}/src/DIRECTNET"

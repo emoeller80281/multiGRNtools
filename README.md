@@ -26,6 +26,9 @@ conda env create -f directnet_environment.yml
 source activate directnet_env
 ```
 
+> NOTE: If you run into issues, remove or rename your R library in your home directory (e.g. `/gpfs/Home/<username>/R`). That will
+> cause the installer to create a new library. 
+
 Install R dependencies
 ```bash
 module load R/4.3.2
