@@ -10,4 +10,8 @@
 
 conda activate directnet_env
 
-Rscript src/DIRECTNET/install_directnet.R
+CONDA_ENV_LIB="$CONDA_PREFIX/lib/R/library"
+
+Rscript src/DIRECTNET/install_directnet.R \
+    "$CONDA_ENV_LIB"
+

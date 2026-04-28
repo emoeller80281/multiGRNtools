@@ -11,9 +11,10 @@
 
 # ===== METHOD SELECTION =====
 RUN_CELLORACLE=false
-RUN_DIRECTNET=true
+RUN_DIRECTNET=false
 RUN_LINGER=false
 RUN_SCENIC_PLUS=false
+RUN_FIGR=true
 
 # ===== SAMPLE CONFIGURATION =====
 EXPERIMENT_LIST=(
@@ -22,9 +23,9 @@ EXPERIMENT_LIST=(
     # "mESC|E8.5_rep1|mouse|mESC"
     # "mESC|E8.5_rep2|mouse|mESC"
 
-    # "Macrophage|buffer_1|human|Macrophage"
+    "Macrophage|buffer_1|human|Macrophage"
     # "Macrophage|buffer_2|human|Macrophage"
-    "Macrophage|buffer_3|human|Macrophage"
+    # "Macrophage|buffer_3|human|Macrophage"
     # "Macrophage|buffer_4|human|Macrophage"
 
     # "iPSC|WT_D13_rep1|human|iPSC"
@@ -72,8 +73,9 @@ EXPERIMENT_CONFIG="${EXPERIMENT_LIST[$TASK_ID]}"
 IFS='|' read -r CELL_TYPE SAMPLE_NAME SPECIES RAW_CELL_TYPE <<< "$EXPERIMENT_CONFIG"
 
 # Construct file paths for the RNA and ATAC data based on the raw data directory structure
-rna_file="${RAW_DATA_DIR}/${RAW_CELL_TYPE}/${SAMPLE_NAME}/${SAMPLE_NAME}_RNA.csv"
-atac_file="${RAW_DATA_DIR}/${RAW_CELL_TYPE}/${SAMPLE_NAME}/${SAMPLE_NAME}_ATAC.csv"
+# Find the first match in the sample directory for RNA and ATAC files
+rna_file=$(ls "${RAW_DATA_DIR}/${RAW_CELL_TYPE}/${SAMPLE_NAME}"/*RNA*.csv 2>/dev/null | head -n 1)
+atac_file=$(ls "${RAW_DATA_DIR}/${RAW_CELL_TYPE}/${SAMPLE_NAME}"/*ATAC*.csv 2>/dev/null | head -n 1)
 
 # Create a results directory for the current sample
 sample_result_dir="${RESULTS_DIR}/${CELL_TYPE}/${SAMPLE_NAME}"
@@ -133,4 +135,18 @@ if [ "$RUN_SCENIC_PLUS" = true ]; then
         --output=${log_dir}/SCENIC_PLUS.log \
         --error=${log_dir}/SCENIC_PLUS.err \
         "${PROJECT_DIR}/src/SCENIC_PLUS/run_scenic_plus.sh"
+fi
+
+if [ "$RUN_FIGR" = true ]; then
+    echo "Submitting FigR job for ${CELL_TYPE} - ${SAMPLE_NAME} (Task ID: ${ARRAY_TASK_ID})"
+
+    log_dir="${PROJECT_DIR}/LOGS/FigR/${CELL_TYPE}/${SAMPLE_NAME}"
+    mkdir -p "${log_dir}"
+
+    sbatch \
+        --export=PROJECT_DIR="$PROJECT_DIR",RESULTS_DIR="$RESULTS_DIR",CELL_TYPE="$CELL_TYPE",SAMPLE_NAME="$SAMPLE_NAME",SPECIES="$SPECIES",RNA_FILE="$rna_file",ATAC_FILE="$atac_file" \
+        --job-name="SCMULTI_PREDICT_FigR_${CELL_TYPE}_${SAMPLE_NAME}" \
+        --output=${log_dir}/FigR.log \
+        --error=${log_dir}/FigR.err \
+        "${PROJECT_DIR}/src/FigR/run_FigR.sh"
 fi

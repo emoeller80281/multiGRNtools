@@ -12,3 +12,4 @@ src/SCENIC_PLUS/scenicplus/
 cbust
 scplus_pipeline
 *.pyc
+run_tools_karamveer.sh

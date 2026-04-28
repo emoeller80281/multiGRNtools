@@ -1,4 +1,6 @@
-personal_lib <- "/gpfs/Home/esm5360/miniconda3/envs/directnet_env/lib/R/library"
+args <- commandArgs(trailingOnly = TRUE)
+
+personal_lib <- args[1]
 
 remotes::install_github(
   "cole-trapnell-lab/monocle3",
@@ -15,6 +17,6 @@ remotes::install_github(
 
 remotes::install_github(
   "zhanglhbioinfor/DIRECT-NET",
-  lib = "/gpfs/Home/esm5360/miniconda3/envs/directnet_env/lib/R/library",
+  lib = personal_lib,
   upgrade = "never"
 )

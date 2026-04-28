@@ -261,7 +261,7 @@ pbmc <- Run_DIRECT_NET_parallel(
   size_factor_normalize = FALSE,
   genome.info = genome.info,
   focus_markers = markers,
-  progress_every = 1,
+  progress_every = 100,
   n_workers = as.integer(num_cpus),
   nthread = 1,
   coordinate_format = "directnet_original",
@@ -292,38 +292,139 @@ focused_markers <- data.frame(
 ## ── CRE-Gene links ────────────────────────────────────────────
 CREs_Gene <- generate_CRE_Gene_links(direct.net_result, markers = focused_markers)
 
+cat("CREs_Gene names:\n")
+print(names(CREs_Gene))
+
+cat("CREs_Gene distal:\n")
+print(class(CREs_Gene$distal))
+print(dim(as.data.frame(CREs_Gene$distal)))
+print(head(as.data.frame(CREs_Gene$distal)))
+
+cat("CREs_Gene promoter:\n")
+print(class(CREs_Gene$promoter))
+print(dim(as.data.frame(CREs_Gene$promoter)))
+print(head(as.data.frame(CREs_Gene$promoter)))
+
+cat("direct.net_result columns:\n")
+print(colnames(direct.net_result))
+print(head(direct.net_result))
+
 ## ── Variable peaks ────────────────────────────────────────────
 DefaultAssay(pbmc) <- "ATAC"
 variable_peaks <- VariableFeatures(pbmc)
 
-variable_peaks1                <- list()
-variable_peaks1[[sample_name]] <- variable_peaks
+cat("Variable peaks length:\n")
+print(length(variable_peaks))
+print(head(variable_peaks))
+
+L_G_record_list <- list()
+P_L_G_record_list <- list()
+
+L_G_record_list[[sample_name]] <- as.data.frame(CREs_Gene$distal)
+P_L_G_record_list[[sample_name]] <- as.data.frame(CREs_Gene$promoter)
+
+# DIRECTNET generate_CRE expects underscore peak format
+L_G_record_list[[sample_name]]$loci <- gsub("-", "_", L_G_record_list[[sample_name]]$loci)
+P_L_G_record_list[[sample_name]]$loci <- gsub("-", "_", P_L_G_record_list[[sample_name]]$loci)
+
+variable_peaks1 <- list()
+variable_peaks1[[sample_name]] <- gsub("-", "_", variable_peaks)
+
+cat("Distal overlap after format normalization:\n")
+print(sum(L_G_record_list[[sample_name]]$loci %in% variable_peaks1[[sample_name]]))
+
+cat("Promoter overlap after format normalization:\n")
+print(sum(P_L_G_record_list[[sample_name]]$loci %in% variable_peaks1[[sample_name]]))
+
+if (sum(L_G_record_list[[sample_name]]$loci %in% variable_peaks1[[sample_name]]) == 0 &&
+    sum(P_L_G_record_list[[sample_name]]$loci %in% variable_peaks1[[sample_name]]) == 0) {
+  stop("No CRE loci overlap variable_peaks after format normalization.")
+}
 
 ## ── Focused CREs ──────────────────────────────────────────────
 Focused_CREs <- generate_CRE(
-  L_G_record   = CREs_Gene$distal,
-  P_L_G_record = CREs_Gene$promoter,
-  variable_peaks1
+  L_G_record   = L_G_record_list,
+  P_L_G_record = P_L_G_record_list,
+  da_peaks_list = variable_peaks1
 )
+cat("Focused_CREs names:\n")
+print(names(Focused_CREs))
 
-## ── TF links (distal + promoter) ─────────────────────────────
+names(Focused_CREs$distal) <- sample_name
+names(Focused_CREs$promoter) <- sample_name
+names(Focused_CREs$L_G_record) <- sample_name
+names(Focused_CREs$P_L_G_record) <- sample_name
+
+cat("Distal CRE object:\n")
+print(class(Focused_CREs$distal))
+print(length(Focused_CREs$distal))
+print(names(Focused_CREs$distal))
+print(str(Focused_CREs$distal, max.level = 2))
+
+cat("Promoter CRE object:\n")
+print(class(Focused_CREs$promoter))
+print(length(Focused_CREs$promoter))
+print(names(Focused_CREs$promoter))
+print(str(Focused_CREs$promoter, max.level = 2))
+
+safe_generate_peak_TF_links <- function(peaks_bed_list, species, genome, markers, label) {
+  if (is.null(peaks_bed_list) || length(peaks_bed_list) == 0) {
+    warning(label, " peaks_bed_list is empty. Returning empty TF record.")
+    return(data.frame())
+  }
+
+  # Drop empty list elements
+  nonempty <- vapply(peaks_bed_list, function(x) {
+    !is.null(x) && NROW(x) > 0
+  }, logical(1))
+
+  peaks_bed_list <- peaks_bed_list[nonempty]
+
+  if (length(peaks_bed_list) == 0) {
+    warning(label, " peaks_bed_list has no non-empty elements. Returning empty TF record.")
+    return(data.frame())
+  }
+
+  # Keep markers only for groups present in CRE list, if names exist
+  if (!is.null(names(peaks_bed_list)) && all(names(peaks_bed_list) != "")) {
+    markers <- markers[markers$group %in% names(peaks_bed_list), , drop = FALSE]
+  }
+
+  if (nrow(markers) == 0) {
+    warning(label, " markers has no groups matching peaks_bed_list. Returning empty TF record.")
+    return(data.frame())
+  }
+
+  generate_peak_TF_links(
+    peaks_bed_list = peaks_bed_list,
+    species        = species,
+    genome         = genome,
+    markers        = markers
+  )
+}
+
 cat("Detecting TFs for distal CREs...\n")
-L_TF_record <- generate_peak_TF_links(
+L_TF_record <- safe_generate_peak_TF_links(
   peaks_bed_list = Focused_CREs$distal,
   species        = species,
   genome         = bsgenome,
-  markers        = focused_markers
+  markers        = focused_markers,
+  label          = "distal"
 )
+cat("  - Done\n")
 
 cat("Detecting TFs for promoter CREs...\n")
-P_L_TF_record <- generate_peak_TF_links(
+P_L_TF_record <- safe_generate_peak_TF_links(
   peaks_bed_list = Focused_CREs$promoter,
   species        = species,
   genome         = bsgenome,
-  markers        = focused_markers
+  markers        = focused_markers,
+  label          = "promoter"
 )
+cat("  - Done\n")
 
 ## ── Generate network links ────────────────────────────────────
+cat("Generating network links...\n")
 groups <- pbmc$celltype
 network_links <- generate_links_for_Cytoscape(
   L_G_record   = Focused_CREs$L_G_record,
@@ -332,8 +433,10 @@ network_links <- generate_links_for_Cytoscape(
   P_L_TF_record,
   groups
 )
+cat("  - Done\n")
 
 ## ── Save outputs ──────────────────────────────────────────────
+cat("Saving outputs...\n")
 outfile <- file.path(out_dir, paste0(sample_name, "_Network_links.csv"))
 write.csv(network_links, outfile, row.names = FALSE, quote = FALSE)
 cat("Saved network links to:", outfile, "\n")

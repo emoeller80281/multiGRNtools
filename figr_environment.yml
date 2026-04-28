@@ -1,4 +1,4 @@
-name: directnet_env
+name: figr_env
 channels:
   - conda-forge
   - bioconda
@@ -18,7 +18,14 @@ dependencies:
   - r-igraph
   - r-seurat
   - r-lme4
-
+  - r-fnn
+  - r-doparallel
+  - r-foreach
+  - r-dplyr
+  - r-rmpfr
+  - r-gmp
+  - r-buencolors
+  
   # Bioconductor deps
   - bioconductor-genomicranges
   - bioconductor-rtracklayer
@@ -35,6 +42,7 @@ dependencies:
   - bioconductor-bsgenome.mmusculus.ucsc.mm10
   - bioconductor-glmgampoi
   - bioconductor-jaspar2016
+  - bioconductor-complexheatmap
 
   # Common build/system deps
   - compilers
