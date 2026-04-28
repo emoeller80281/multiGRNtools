@@ -62,40 +62,33 @@ atac_data = atac_data.apply(pd.to_numeric, errors='coerce')
 # Fill missing values with 0
 atac_data.fillna(0, inplace=True)
 
-# Extract regions from row names (assuming "chr:start-end" format)
-regions = atac_data.index.to_series().str.extract(r"^([^:]+):(\d+)-(\d+)$")
-
-regions.dropna(inplace=True)
-
+# Extract regions from row names: supports chr1:10112-10254 and chr1-10112-10254
+regions = atac_data.index.to_series().str.extract(
+    r"^(chr[^:-]+)[:\-](\d+)[\-](\d+)$"
+)
 regions.columns = ["Chrom", "Start", "End"]
 
-# Debug: Check indices and shape
+valid_mask = regions[["Chrom", "Start", "End"]].notna().all(axis=1)
+
 logging.info(f"Initial atac_data shape: {atac_data.shape}")
-logging.info(f"Initial regions shape: {regions.shape}")
+logging.info(f"Valid regions: {valid_mask.sum()} / {len(valid_mask)}")
+logging.info(f"Invalid indices removed: {(~valid_mask).sum()}")
 
-nonzero_cells = (atac_data.sum(axis=0) > 0)
-logging.info(f"Number of non-zero coverage cells: {nonzero_cells.sum()} / {atac_data.shape[1]}")
-atac_data = atac_data.loc[:, nonzero_cells]
+# Align BOTH objects to valid peaks
+atac_data = atac_data.loc[valid_mask.values, :]
+regions = regions.loc[valid_mask.values, :].copy()
 
-# Handle missing values in extracted data
-regions["Start"] = pd.to_numeric(regions["Start"], errors="coerce")
-regions["End"] = pd.to_numeric(regions["End"], errors="coerce")
-
-# Drop rows with NaN in Start or End
-valid_indices = regions.dropna(subset=["Start", "End"]).index
-# Debug: Log invalid indices
-invalid_indices = set(atac_data.index) - set(valid_indices)
-logging.info(f"Invalid indices removed: {len(invalid_indices)}")
-
-# Debug: Verify alignment
-logging.info(f"Post-alignment atac_data shape: {atac_data.shape}")
-logging.info(f"Post-alignment regions shape: {regions.shape}")
-
-# Convert Start and End to integers
 regions["Start"] = regions["Start"].astype(int)
 regions["End"] = regions["End"].astype(int)
 
-# Calculate the mean signal for each region
+# Filter empty cells after invalid peaks are removed
+nonzero_cells = atac_data.sum(axis=0) > 0
+logging.info(f"Number of non-zero coverage cells: {nonzero_cells.sum()} / {atac_data.shape[1]}")
+atac_data = atac_data.loc[:, nonzero_cells]
+
+logging.info(f"Post-alignment atac_data shape: {atac_data.shape}")
+logging.info(f"Post-alignment regions shape: {regions.shape}")
+
 regions["Score"] = atac_data.mean(axis=1).values
 
 # Log a sample of the resulting regions DataFrame
@@ -141,7 +134,7 @@ mallet_path="/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/SCEN
 models=run_cgs_models_mallet(
     cistopic_obj,
     n_topics=[2, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
-    n_cpu=64,
+    n_cpu=int(os.environ.get("SLURM_CPUS_PER_TASK", 32)),
     n_iter=150,
     random_state=555,
     alpha=50,

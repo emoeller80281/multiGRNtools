@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH --job-name="submit_multiple_scmultipredict_jobs"
+#SBATCH --job-name="multiGRNtools_all_methods"
 #SBATCH --output=/dev/null
 #SBATCH --error=/dev/null
 #SBATCH --time=08:00:00
@@ -14,8 +14,8 @@ RUN_CELLORACLE=false
 RUN_DIRECTNET=false
 RUN_LINGER=false
 RUN_SCENIC_PLUS=false
-RUN_FIGR=true
-RUN_PANDO=false
+RUN_FIGR=false
+RUN_PANDO=true
 
 # ===== SAMPLE CONFIGURATION =====
 EXPERIMENT_LIST=(

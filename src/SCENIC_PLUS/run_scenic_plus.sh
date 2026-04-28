@@ -609,7 +609,7 @@ check_or_create_dir "$LOG_DIR"
 
 cd "${SCRIPT_DIR}"
 
-check_if_running
+# check_if_running
 determine_num_cpus
 activate_conda_env
 
