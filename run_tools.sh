@@ -14,8 +14,8 @@ RUN_CELLORACLE=false
 RUN_DIRECTNET=false
 RUN_LINGER=false
 RUN_SCENIC_PLUS=false
-RUN_FIGR=false
-RUN_PANDO=true
+RUN_FIGR=true
+RUN_PANDO=false
 
 # ===== SAMPLE CONFIGURATION =====
 EXPERIMENT_LIST=(
@@ -145,7 +145,7 @@ if [ "$RUN_FIGR" = true ]; then
     mkdir -p "${log_dir}"
 
     sbatch \
-        --export=PROJECT_DIR="$PROJECT_DIR",RESULTS_DIR="$RESULTS_DIR",CELL_TYPE="$CELL_TYPE",SAMPLE_NAME="$SAMPLE_NAME",SPECIES="$SPECIES",RNA_FILE="$rna_file",ATAC_FILE="$atac_file" \
+        --export=PROJECT_DIR="$PROJECT_DIR",RESULTS_DIR="$RESULTS_DIR",GRN_DIR="$GRN_DIR",CELL_TYPE="$CELL_TYPE",SAMPLE_NAME="$SAMPLE_NAME",SPECIES="$SPECIES",RNA_FILE="$rna_file",ATAC_FILE="$atac_file" \
         --job-name="SCMULTI_PREDICT_FigR_${CELL_TYPE}_${SAMPLE_NAME}" \
         --output=${log_dir}/FigR.log \
         --error=${log_dir}/FigR.err \
@@ -159,7 +159,7 @@ if [ "$RUN_PANDO" = true ]; then
     mkdir -p "${log_dir}"
 
     sbatch \
-        --export=PROJECT_DIR="$PROJECT_DIR",RESULTS_DIR="$RESULTS_DIR",CELL_TYPE="$CELL_TYPE",SAMPLE_NAME="$SAMPLE_NAME",SPECIES="$SPECIES",RNA_FILE="$rna_file",ATAC_FILE="$atac_file" \
+        --export=PROJECT_DIR="$PROJECT_DIR",RESULTS_DIR="$RESULTS_DIR",GRN_DIR="$GRN_DIR",CELL_TYPE="$CELL_TYPE",SAMPLE_NAME="$SAMPLE_NAME",SPECIES="$SPECIES",RNA_FILE="$rna_file",ATAC_FILE="$atac_file" \
         --job-name="SCMULTI_PREDICT_Pando_${CELL_TYPE}_${SAMPLE_NAME}" \
         --output=${log_dir}/Pando.log \
         --error=${log_dir}/Pando.err \

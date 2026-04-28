@@ -139,6 +139,17 @@ run_pando() {
 run_pando
 
 echo ""
+echo "Formatting inferred GRN"
+PANDO_RAW_GRN_CSV="${Pando_RESULTS_DIR}/${SAMPLE_NAME}_filtered_network.csv"
+PANDO_FORMATTED_GRN_TSV="${GRN_DIR}/Pando/pando_${CELL_TYPE}_${SAMPLE_NAME}.tsv"
+
+mkdir -p "$(dirname "$PANDO_FORMATTED_GRN_TSV")"
+
+python "${SCRIPT_DIR}/format_pando_grn.py" \
+  "$PANDO_RAW_GRN_CSV" \
+  "$PANDO_FORMATTED_GRN_TSV"
+
+echo ""
 echo "========================================"
 echo "  Sample $SAMPLE complete : $(date)"
 echo "========================================"

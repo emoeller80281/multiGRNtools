@@ -191,7 +191,7 @@ if (genome == "mm10") {
 ## ── Infer GRN ────────────────────────────────────────────────
 message("Inferring GRN with GLM (", length(genes), " genes)...")
 
-cl <- parallel::makeCluster(n_cores, type = "PSOCK")
+cl <- parallel::makeCluster(num_cpu, type = "PSOCK")
 doParallel::registerDoParallel(cl)
 
 message("foreach backend: ", foreach::getDoParName())

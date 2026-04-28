@@ -113,7 +113,6 @@ fi
 # fi
 
 SAMPLE_DIR="$(dirname "$RNA_FILE")"
-SAMPLE="$SAMPLE_NAME"
 NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 echo "========================================"
@@ -149,7 +148,7 @@ run_figr() {
       "$RNA_FILE" \
       "$ATAC_FILE" \
       "$FigR_RESULTS_DIR" \
-      "$SAMPLE" \
+      "$SAMPLE_NAME" \
       "$GENOME_REF" \
       "$NUM_THREADS" \
       || { echo "  FAILED at FigR.R"; exit 1; }
@@ -163,6 +162,17 @@ run_figr() {
 run_figr
 
 echo ""
+echo "Formatting inferred GRN"
+FIGR_RAW_GRN_CSV="${FigR_RESULTS_DIR}/${SAMPLE_NAME}_filtered_network.csv"
+FIGR_FORMATTED_GRN_TSV="${GRN_DIR}/FigR/figr_${CELL_TYPE}_${SAMPLE_NAME}.tsv"
+
+mkdir -p "$(dirname "$FIGR_FORMATTED_GRN_TSV")"
+
+python "${SCRIPT_DIR}/format_figr_grn.py" \
+  "$FIGR_RAW_GRN_CSV" \
+  "$FIGR_FORMATTED_GRN_TSV"
+
+echo ""
 echo "========================================"
-echo "  Sample $SAMPLE complete : $(date)"
+echo "  Sample $SAMPLE_NAME complete : $(date)"
 echo "========================================"
