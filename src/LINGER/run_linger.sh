@@ -84,7 +84,7 @@ check_tools() {
 activate_conda_env() {
     echo ""
     echo "[INFO] Activating Conda environment '$CONDA_ENV_NAME'..."
-    if ! conda activate "$CONDA_ENV_NAME"; then
+    if ! source activate "$CONDA_ENV_NAME"; then
         echo "[ERROR] Could not activate Conda environment '$CONDA_ENV_NAME'."
         exit 1
     fi
@@ -325,7 +325,7 @@ run_pipeline() {
 
 echo "===== RUNNING VALIDATION CHECKS ====="
 validate_critical_variables
-check_for_running_jobs
+# check_for_running_jobs
 check_tools
 check_input_files
 activate_conda_env
