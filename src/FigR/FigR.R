@@ -60,6 +60,8 @@ library(foreach)
 library(parallel)
 library(dplyr)
 
+pdf(NULL)
+
 ## ── Read data ────────────────────────────────────────────────
 message("Loading RNA counts...")
 rna_counts  <- read.table(rna_file,  sep = ",", row.names = 1, header = TRUE, comment.char = "")
@@ -168,9 +170,9 @@ rownames(cellKNN.mat) <- colnames(dorcMat)
 ## ── Smooth scores ─────────────────────────────────────────────
 message("Smoothing DORC scores...")
 dorcMat.smooth <- smoothScoresNN(NNmat = cellKNN.mat, mat = dorcMat,
-                                 nCores = num_cpus)
+                                 nCores = 16)
 rnaMat.smooth  <- smoothScoresNN(NNmat = cellKNN.mat, mat = rna_sparse,
-                                 nCores = num_cpus)
+                                 nCores = 16)
 
 ## Standardize DORC smooth matrix
 dorcMat.smooth        <- as.matrix(dorcMat.smooth)
@@ -183,20 +185,19 @@ message("NAs in standardized dorcMat.smooth: ", sum(is.na(dorcMat.smooth)))
 
 ## ── Run FigR GRN ──────────────────────────────────────────────
 message("Running FigR GRN (genome = ", genome, ")...")
-nCores <- num_cpus
-cl <- makeCluster(nCores, type = "PSOCK")
-registerDoParallel(cl)
+figr_cores <- min(num_cpus, 16)
+
+message("Running runFigRGRN with nCores = ", figr_cores)
 
 fig.d <- runFigRGRN(
   ATAC.se   = atac_se,
   rnaMat    = rnaMat.smooth,
   dorcMat   = dorcMat.smooth,
   dorcTab   = cisCor.filt,
-  genome    = genome,          # "hg38" or "mm10" — no hardcoding
+  genome    = genome,
   dorcGenes = dorcGenes,
-  nCores    = nCores
+  nCores    = figr_cores
 )
-stopCluster(cl)
 
 ## ── Save outputs ──────────────────────────────────────────────
 saveRDS(fig.d, file.path(out_dir, paste0(sample_name, "_fig.d.rds")))

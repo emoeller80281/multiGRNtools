@@ -1,0 +1,57 @@
+name: pando_env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - r-base=4.3
+  - r-devtools
+  - r-remotes
+  - r-biocmanager
+
+  # CRAN deps
+  - r-htmltable
+  - r-hmisc
+  - r-xgboost
+  - r-signac
+  - r-igraph
+  - r-seurat
+  - r-lme4
+  - r-haven
+  - r-tidyverse
+  - r-doparallel
+  - r-foreach
+
+  # Bioconductor deps
+  - bioconductor-genomicranges
+  - bioconductor-rtracklayer
+  - bioconductor-gviz
+  - bioconductor-biovizbase
+  - bioconductor-chromvar
+  - bioconductor-motifmatchr
+  - bioconductor-summarizedexperiment
+  - bioconductor-singlecellexperiment
+  - bioconductor-sparsematrixstats
+  - bioconductor-ensdb.hsapiens.v86
+  - bioconductor-ensdb.mmusculus.v79
+  - bioconductor-bsgenome.hsapiens.ucsc.hg38
+  - bioconductor-bsgenome.mmusculus.ucsc.mm10
+  - bioconductor-glmgampoi
+  - bioconductor-jaspar2016
+
+  # Common build/system deps
+  - compilers
+  - make
+  - cmake
+  - pkg-config
+  - git
+  - gsl
+  - hdf5
+  - udunits2
+  - geos
+  - proj
+  - gdal
+  - libxml2
+  - openssl
+  - curl

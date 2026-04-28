@@ -29,7 +29,7 @@ parser = argparse.ArgumentParser(description="Train the scNN neural network mode
 parser.add_argument("--tss_motif_info_path", required=True, help="Path to the LINGER TSS information path for the organism")
 parser.add_argument("--sample_data_dir", required=True, help="Directory containing LINGER intermediate files")
 parser.add_argument("--genome", required=True, help="Organism genome code")
-parser.add_argument("--num_cpu", default=4, help="Organism genome code")
+parser.add_argument("--num_cpu", default=4, help="Number of CPUs to use for parallel processing")
 
 args = parser.parse_args()
 

@@ -14,7 +14,8 @@ RUN_CELLORACLE=false
 RUN_DIRECTNET=false
 RUN_LINGER=false
 RUN_SCENIC_PLUS=false
-RUN_FIGR=true
+RUN_FIGR=false
+RUN_PANDO=true
 
 # ===== SAMPLE CONFIGURATION =====
 EXPERIMENT_LIST=(
@@ -149,4 +150,18 @@ if [ "$RUN_FIGR" = true ]; then
         --output=${log_dir}/FigR.log \
         --error=${log_dir}/FigR.err \
         "${PROJECT_DIR}/src/FigR/run_FigR.sh"
+fi
+
+if [ "$RUN_PANDO" = true ]; then
+    echo "Submitting Pando job for ${CELL_TYPE} - ${SAMPLE_NAME} (Task ID: ${ARRAY_TASK_ID})"
+
+    log_dir="${PROJECT_DIR}/LOGS/Pando/${CELL_TYPE}/${SAMPLE_NAME}"
+    mkdir -p "${log_dir}"
+
+    sbatch \
+        --export=PROJECT_DIR="$PROJECT_DIR",RESULTS_DIR="$RESULTS_DIR",CELL_TYPE="$CELL_TYPE",SAMPLE_NAME="$SAMPLE_NAME",SPECIES="$SPECIES",RNA_FILE="$rna_file",ATAC_FILE="$atac_file" \
+        --job-name="SCMULTI_PREDICT_Pando_${CELL_TYPE}_${SAMPLE_NAME}" \
+        --output=${log_dir}/Pando.log \
+        --error=${log_dir}/Pando.err \
+        "${PROJECT_DIR}/src/Pando/run_pando.sh"
 fi

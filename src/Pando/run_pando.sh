@@ -1,7 +1,7 @@
 #!/bin/bash -l
-#SBATCH --job-name=FigR
-#SBATCH --output=/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/LOGS/FigR/FigR_%A.txt
-#SBATCH --error=/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/LOGS/FigR/FigR_%A.err
+#SBATCH --job-name=Pando
+#SBATCH --output=/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/LOGS/Pando/Pando_%A.txt
+#SBATCH --error=/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/LOGS/Pando/Pando_%A.err
 #SBATCH --time=12:00:00
 #SBATCH -p compute
 #SBATCH --nodes=1
@@ -22,7 +22,7 @@ if [[ -n "${SPECIES:-}" ]]; then
 fi
 
 ## ── modules ───────────────────────────────────────────
-source activate figr_env
+source activate pando_env
 
 if [[ -z "$CONDA_PREFIX" ]]; then
   echo "ERROR: conda environment activation failed (CONDA_PREFIX is empty)"
@@ -48,12 +48,12 @@ if [[ ! -f "$CONDA_PREFIX/lib/libstdc++.so.6" ]]; then
 fi
 
 ## ── Base paths ────────────────────────────────────────────────
-BASE_DIR="${PROJECT_DIR}/src/FigR"
+BASE_DIR="${PROJECT_DIR}/src/Pando"
 SCRIPT_DIR=$BASE_DIR
-FigR_RESULTS_DIR="${RESULTS_DIR}/${CELL_TYPE}/${SAMPLE_NAME}/FigR"
-LOG_DIR="${PROJECT_DIR}/LOGS/FigR/${CELL_TYPE}/${SAMPLE_NAME}"
+Pando_RESULTS_DIR="${RESULTS_DIR}/${CELL_TYPE}/${SAMPLE_NAME}/Pando"
+LOG_DIR="${PROJECT_DIR}/LOGS/Pando/${CELL_TYPE}/${SAMPLE_NAME}"
 
-mkdir -p "$LOG_DIR" "$FigR_RESULTS_DIR"
+mkdir -p "$LOG_DIR" "$Pando_RESULTS_DIR"
 
 
 ## Provide newer conda libstdc++ for user R packages compiled with newer ABI.
@@ -90,28 +90,6 @@ else
   exit 1
 fi
 
-# GENOME_DIR="${REFERENCE_GENOME_DIR}/${GENOME_REF}"
-# TSS_FILE="${GENOME_DIR}/gene_tss.bed"
-
-# if [[ "$GENOME_REF" == "hg38" ]]; then
-#   GTF_FILE="${GENOME_DIR}/Homo_sapiens.GRCh38.113.gtf"
-# else
-#   GTF_FILE="${GENOME_DIR}/Mus_musculus.GRCm39.113.gtf"
-# fi
-
-# if [[ ! -d "$GENOME_DIR" ]]; then
-#   echo "ERROR: Genome directory not found: $GENOME_DIR"
-#   exit 1
-# fi
-# if [[ ! -f "$TSS_FILE" ]]; then
-#   echo "ERROR: TSS file not found: $TSS_FILE"
-#   exit 1
-# fi
-# if [[ ! -f "$GTF_FILE" ]]; then
-#   echo "ERROR: GTF file not found: $GTF_FILE"
-#   exit 1
-# fi
-
 SAMPLE_DIR="$(dirname "$RNA_FILE")"
 SAMPLE="$SAMPLE_NAME"
 NUM_THREADS=$SLURM_CPUS_PER_TASK
@@ -128,39 +106,37 @@ echo "  Sample name  : $SAMPLE_NAME"
 echo "  Sample dir   : $SAMPLE_DIR"
 echo "  RNA_FILE     : $RNA_FILE"
 echo "  ATAC_FILE    : $ATAC_FILE"
-# echo "  Genome dir   : $GENOME_DIR"
-# echo "  TSS file     : $TSS_FILE"
-# echo "  GTF file     : $GTF_FILE"
 echo "  Num threads   : $NUM_THREADS"
 echo "========================================"
 
 
-run_figr() {
+run_pando() {
   if [[ ! -f "$RNA_FILE" ]]; then echo "  SKIP: RNA file not found : $RNA_FILE"; return; fi
   if [[ ! -f "$ATAC_FILE" ]]; then echo "  SKIP: ATAC file not found: $ATAC_FILE"; return; fi
 
-  mkdir -p "$FigR_RESULTS_DIR"
+  mkdir -p "$Pando_RESULTS_DIR"
 
   {
-    echo "=== Starting FigR ==="
+    echo "=== Starting Pando ==="
     echo "  Start     : $(date)"
 
-    /usr/bin/time -v Rscript "${SCRIPT_DIR}/FigR.R" \
+    /usr/bin/time -v Rscript "${SCRIPT_DIR}/Pando.R" \
       "$RNA_FILE" \
       "$ATAC_FILE" \
-      "$FigR_RESULTS_DIR" \
+      "$Pando_RESULTS_DIR" \
       "$SAMPLE" \
       "$GENOME_REF" \
+      "$SCRIPT_DIR" \
       "$NUM_THREADS" \
-      || { echo "  FAILED at FigR.R"; exit 1; }
+      || { echo "  FAILED at Pando.R"; exit 1; }
 
     echo ""
     echo "  Done: $(date)"
-  } > "$LOG_DIR/FigR_run.log" 2>&1 \
+  } > "$LOG_DIR/Pando_run.log" 2>&1 \
     && echo "  Done"
 }
 
-run_figr
+run_pando
 
 echo ""
 echo "========================================"

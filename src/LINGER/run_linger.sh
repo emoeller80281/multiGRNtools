@@ -2,8 +2,9 @@
 
 #SBATCH -p compute
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=23
-#SBATCH --mem-per-cpu=16G
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=128G
+#SBATCH --time=24:00:00
 
 set -euo pipefail
 
@@ -298,7 +299,8 @@ run_pipeline() {
     run_step "Step_040.Homer_Motif_Finding" "${BASE_DIR}/Step_040.Homer_Motif_Finding.py" \
         --tss_motif_info_path "$TSS_MOTIF_INFO_PATH" \
         --sample_data_dir "$LINGER_RESULTS_DIR" \
-        --genome "$GENOME"
+        --genome "$GENOME" \
+        --num_cpu "$NUM_CPU"
 
     run_step "Step_050.Create_Cell_Type_GRN" "${BASE_DIR}/Step_050.Create_Cell_Type_GRN.py" \
         --tss_motif_info_path "$TSS_MOTIF_INFO_PATH" \
