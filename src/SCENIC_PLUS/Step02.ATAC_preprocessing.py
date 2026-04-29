@@ -62,11 +62,37 @@ atac_data = atac_data.apply(pd.to_numeric, errors='coerce')
 # Fill missing values with 0
 atac_data.fillna(0, inplace=True)
 
-# Extract regions from row names: supports chr1:10112-10254 and chr1-10112-10254
-regions = atac_data.index.to_series().str.extract(
+# Normalize peak names to pycisTopic/SCENIC+ format: chrN:start-end
+peak_parts = atac_data.index.to_series().str.extract(
     r"^(chr[^:-]+)[:\-](\d+)[\-](\d+)$"
 )
+peak_parts.columns = ["Chrom", "Start", "End"]
+
+valid_mask = peak_parts.notna().all(axis=1)
+
+logging.info(f"Initial atac_data shape: {atac_data.shape}")
+logging.info(f"Valid regions: {valid_mask.sum()} / {len(valid_mask)}")
+logging.info(f"Invalid indices removed: {(~valid_mask).sum()}")
+
+# Keep only valid genomic peak rows
+atac_data = atac_data.loc[valid_mask.values, :].copy()
+peak_parts = peak_parts.loc[valid_mask.values, :].copy()
+
+# Convert rownames to chr:start-end
+atac_data.index = (
+    peak_parts["Chrom"].astype(str)
+    + ":"
+    + peak_parts["Start"].astype(str)
+    + "-"
+    + peak_parts["End"].astype(str)
+)
+
+# Now build regions from the normalized index
+regions = atac_data.index.to_series().str.extract(
+    r"^(chr[^:]+):(\d+)-(\d+)$"
+)
 regions.columns = ["Chrom", "Start", "End"]
+regions.index = atac_data.index
 
 valid_mask = regions[["Chrom", "Start", "End"]].notna().all(axis=1)
 
