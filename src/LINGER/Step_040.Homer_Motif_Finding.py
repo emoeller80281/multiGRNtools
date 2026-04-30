@@ -60,7 +60,7 @@ genome_map.index = genome_map['genome_short']
 
 # Construct the Homer command with the correct genome and motif file path
 motif_file = f'all_motif_rmdup_{genome_map.loc[args.genome]["Motif"]}'
-command = f'findMotifsGenome.pl {os.path.join(args.sample_data_dir, "region.txt")} {args.genome} {output_dir} -p {args.num_cpu} -size given -redundant 0.5 -nomotif -find {os.path.join(args.tss_motif_info_path, motif_file)} > {os.path.join(output_dir, "MotifTarget.bed")}'
+command = f'findMotifsGenome.pl {os.path.join(args.sample_data_dir, "region.txt")} {args.genome} {output_dir} -p {args.num_cpu} -size 200 -redundant 0.5 -nomotif -find {os.path.join(args.tss_motif_info_path, motif_file)} > {os.path.join(output_dir, "MotifTarget.bed")}'
 
 # Run Homer command with error handling
 try:
