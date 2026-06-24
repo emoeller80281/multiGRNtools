@@ -131,7 +131,7 @@ new_config = {
         "top_n_regionTogenes_per_region": DoubleQuotedScalarString(""),
         "min_regions_per_gene": 0,
         "rho_threshold": 0.05,
-        "min_target_genes": 3,
+        "min_target_genes": 2,
     },
 }
 

@@ -1,37 +1,46 @@
 #!/bin/bash -l
 #SBATCH --job-name="multiGRNtools_2d"
-#SBATCH --output=/dev/null
-#SBATCH --error=/dev/null
+#SBATCH --output="LOGS/run_tools/run_tools_%A/job_%a.out"
+#SBATCH --error="LOGS/run_tools/run_tools_%A/job_%a.err"
 #SBATCH --time=48:00:00
 #SBATCH -p compute
 #SBATCH --nodes=1
 #SBATCH -c 12
 #SBATCH --mem=64G
-#SBATCH --array=0-100%5
+#SBATCH --array=0-100%6
 
 set -euo pipefail
 
+source /gpfs/Home/esm5360/miniconda3/etc/profile.d/conda.sh
+
 # ===== SELECTED METHODS =====
 METHOD_LIST=(
-    "Pando"
-    "FigR"
+    # "Pando"
+    # "FigR"
     # "SCENIC_PLUS"
     # "LINGER"
     # "DIRECTNET"
-    # "CellOracle"
+    "CellOracle"
 )
 
 # ===== SAMPLE CONFIGURATION =====
 EXPERIMENT_LIST=(
-    # "mESC|E7.5_rep1|mouse|mESC"
-    # "mESC|E7.5_rep2|mouse|mESC"
-    # "mESC|E8.5_rep1|mouse|mESC"
-    # "mESC|E8.5_rep2|mouse|mESC"
-    # "Macrophage|buffer_1|human|Macrophage"
-    "Macrophage|buffer_2|human|Macrophage"
-    # "Macrophage|buffer_3|human|Macrophage"
-    # "Macrophage|buffer_4|human|Macrophage"
-    # "K562|sample_1|human|K562"
+    # "iPSC|WT_D13_rep1|human"
+    # "mESC|E7.5_rep1|mouse"
+    # "mESC|E7.5_rep2|mouse"
+    # "mESC|E8.5_rep1|mouse"
+    # "mESC|E8.5_rep2|mouse"
+    # "Macrophage|buffer_1|human"
+    # "Macrophage|buffer_2|human"
+    # "Macrophage|buffer_3|human"
+    # "Macrophage|buffer_4|human"
+    # "K562|sample_1|human"
+    "mouse_liver|liver_1|mouse"
+    # "mouse_liver|liver_3|mouse"
+    # "mouse_liver|liver_4|mouse"
+    # "mouse_liver|liver_5|mouse"
+    # "mouse_liver|liver_6|mouse"
+    # "mouse_liver|liver_7|mouse"
 )
 
 NUM_EXPERIMENTS=${#EXPERIMENT_LIST[@]}
@@ -51,7 +60,7 @@ METHOD_ID=$((TASK_ID % NUM_METHODS))
 EXPERIMENT_CONFIG="${EXPERIMENT_LIST[$EXPERIMENT_ID]}"
 METHOD="${METHOD_LIST[$METHOD_ID]}"
 
-IFS='|' read -r CELL_TYPE SAMPLE_NAME SPECIES RAW_CELL_TYPE <<< "$EXPERIMENT_CONFIG"
+IFS='|' read -r CELL_TYPE SAMPLE_NAME SPECIES <<< "$EXPERIMENT_CONFIG"
 
 echo "TASK_ID=${TASK_ID}"
 echo "EXPERIMENT_ID=${EXPERIMENT_ID}"
@@ -60,7 +69,6 @@ echo "METHOD=${METHOD}"
 echo "CELL_TYPE=${CELL_TYPE}"
 echo "SAMPLE_NAME=${SAMPLE_NAME}"
 echo "SPECIES=${SPECIES}"
-echo "RAW_CELL_TYPE=${RAW_CELL_TYPE}"
 
 # ===== PATH CONFIGURATION =====
 PROJECT_DIR="/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools"
@@ -72,8 +80,8 @@ GRN_DIR="${PROJECT_DIR}/formatted_GRNs"
 
 mkdir -p "${RESULTS_DIR}" "${GRN_DIR}" "${DATA_DIR}"
 
-rna_file=$(ls "${RAW_DATA_DIR}/${RAW_CELL_TYPE}/${SAMPLE_NAME}"/*RNA*.csv 2>/dev/null | head -n 1)
-atac_file=$(ls "${RAW_DATA_DIR}/${RAW_CELL_TYPE}/${SAMPLE_NAME}"/*ATAC*.csv 2>/dev/null | head -n 1)
+rna_file=$(ls "${RAW_DATA_DIR}/${CELL_TYPE}/${SAMPLE_NAME}"/*RNA*.csv 2>/dev/null | head -n 1)
+atac_file=$(ls "${RAW_DATA_DIR}/${CELL_TYPE}/${SAMPLE_NAME}"/*ATAC*.csv 2>/dev/null | head -n 1)
 
 if [ -z "${rna_file}" ] || [ -z "${atac_file}" ]; then
     echo "ERROR: Could not find RNA or ATAC file"
@@ -87,6 +95,8 @@ mkdir -p "${sample_result_dir}"
 
 log_dir="${PROJECT_DIR}/LOGS/${METHOD}/${CELL_TYPE}/${SAMPLE_NAME}"
 mkdir -p "${log_dir}"
+
+conda info --envs
 
 # Shared environment
 export PROJECT_DIR

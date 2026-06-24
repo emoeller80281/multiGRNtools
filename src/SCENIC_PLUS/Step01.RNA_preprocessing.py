@@ -23,7 +23,7 @@ print(f"RNA-seq shape: {rna_data.shape}")
 # Create AnnData objects
 adata_rna = sc.AnnData(rna_data.T)  # Transpose to Cells x Features
 
-# Makes sure that all var names are unique by adding numbers to duplicates
+# Makes sure that all var names are unique
 adata_rna.var_names_make_unique()
 
 # Assign metadata if available

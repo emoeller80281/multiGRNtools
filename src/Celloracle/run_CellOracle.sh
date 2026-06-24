@@ -24,7 +24,6 @@ fi
 
 ## ── Conda + modules ───────────────────────────────────────────
 source activate celloracle_env
-module load R/4.3.2
 module load bedtools
 
 if [[ -z "$CONDA_PREFIX" ]]; then
@@ -233,9 +232,9 @@ run_condition() {
       "$out_dir/output_GRN/celloracle_network_${SAMPLE}_final_GRN.csv" \
       "$grn_dir/CellOracle/celloracle_${CELL_TYPE}_${SAMPLE}.tsv"
 
-  } > "$LOG_DIR/run.log" 2>&1 \
+  } > "$LOG_DIR/CellOracle_run.log" 2>&1 \
     && echo "  Done" \
-    || echo "  FAILED : see $LOG_DIR/run.log"
+    || echo "  FAILED : see $LOG_DIR/CellOracle_run.log"
 }
 
 run_condition \

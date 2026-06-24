@@ -24,6 +24,8 @@ fi
 ## ── modules ───────────────────────────────────────────
 source activate directnet_env
 
+conda info --envs
+
 if [[ -z "$CONDA_PREFIX" ]]; then
   echo "ERROR: conda environment activation failed (CONDA_PREFIX is empty)"
   exit 1
@@ -50,7 +52,7 @@ fi
 ## ── Base paths ────────────────────────────────────────────────
 BASE_DIR="${PROJECT_DIR}/src/DIRECTNET"
 SCRIPT_DIR=$BASE_DIR
-DIRECTNET_RESULTS_DIR="${RESULTS_DIR}/${CELL_TYPE}/${SAMPLE_NAME}/DIRECTNET"
+DIRECTNET_RESULTS_DIR="${RESULTS_DIR}/DIRECTNET"
 LOG_DIR="${PROJECT_DIR}/LOGS/DIRECTNET/${CELL_TYPE}/${SAMPLE_NAME}"
 
 mkdir -p "$LOG_DIR" "$DIRECTNET_RESULTS_DIR"

@@ -388,9 +388,8 @@ def TF_RE_binding(GRNdir,data_dir,adata_RNA,adata_ATAC,genome,method,outdir,num_
         
         # Process chromosomes in parallel
         results_list = []
-        max_workers = min(len(chrlist), len(num_cpu))
         
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        with ProcessPoolExecutor(max_workers=int(num_cpu)) as executor:
             future_to_chr = {
                 executor.submit(process_chr_scnn, chrtemp, outdir, RE_TGlink, TFName, geneName, REName): chrtemp
                 for chrtemp in chrlist
@@ -532,9 +531,8 @@ def cell_type_specific_TF_RE_binding(GRNdir, adata_RNA, adata_ATAC, genome, cell
             
             # Process chromosomes in parallel
             results_list = []
-            max_workers = min(len(chrom), int(num_cpu))
             
-            with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            with ProcessPoolExecutor(max_workers=int(num_cpu)) as executor:
                 future_to_chr = {
                     executor.submit(process_celltype_chr_tf_re_binding, 
                         (adata_RNA, adata_ATAC, GRNdir, chrN, genome, label0, outdir, method)): chrN
@@ -563,9 +561,8 @@ def cell_type_specific_TF_RE_binding(GRNdir, adata_RNA, adata_ATAC, genome, cell
         
         # Process chromosomes in parallel
         results_list = []
-        max_workers = min(len(chrom), int(num_cpu))
         
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        with ProcessPoolExecutor(max_workers=int(num_cpu)) as executor:
             future_to_chr = {
                 executor.submit(process_celltype_chr_tf_re_binding,
                     (adata_RNA, adata_ATAC, GRNdir, chrN, genome, celltype, outdir, method)): chrN
@@ -931,9 +928,8 @@ def cis_reg(GRNdir,data_dir,adata_RNA,adata_ATAC,genome,method,outdir,num_cpu):
         
         # Process chromosomes in parallel
         results_list = []
-        max_workers = min(len(chrlist), int(num_cpu))  # Limit to 8 workers (adjust based on your system)
         
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        with ProcessPoolExecutor(max_workers=int(num_cpu)) as executor:
             # Submit all tasks
             future_to_chr = {
                 executor.submit(cis_shap_scNN, chrN, outdir, RE_TGlink[RE_TGlink['chr']==chrN], REName, TFName): chrN
@@ -1028,9 +1024,8 @@ def cell_type_specific_cis_reg(GRNdir,adata_RNA,adata_ATAC,genome,celltype,outdi
             
             # Process chromosomes in parallel
             results_list = []
-            max_workers = min(len(chrom), int(num_cpu))
             
-            with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            with ProcessPoolExecutor(max_workers=int(num_cpu)) as executor:
                 future_to_chr = {
                     executor.submit(process_celltype_chr_cis_reg,
                         (GRNdir, adata_RNA, adata_ATAC, genome, chrN, label0, outdir)): chrN
@@ -1053,9 +1048,8 @@ def cell_type_specific_cis_reg(GRNdir,adata_RNA,adata_ATAC,genome,celltype,outdi
         
         # Process chromosomes in parallel
         results_list = []
-        max_workers = min(len(chrom), int(num_cpu))
         
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        with ProcessPoolExecutor(max_workers=int(num_cpu)) as executor:
             future_to_chr = {
                 executor.submit(process_celltype_chr_cis_reg,
                     (GRNdir, adata_RNA, adata_ATAC, genome, chrN, celltype, outdir)): chrN
@@ -1210,9 +1204,8 @@ def trans_reg(GRNdir,data_dir,method,outdir,genome,num_cpu):
         
         # Process chromosomes in parallel
         results_list = []
-        max_workers = min(len(chrlist), int(num_cpu))  # Limit to 8 workers (adjust based on your system)
         
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        with ProcessPoolExecutor(max_workers=int(num_cpu)) as executor:
             # Submit all tasks
             future_to_chr = {
                 executor.submit(trans_shap_scNN, chrN, outdir, RE_TGlink[RE_TGlink['chr']==chrN], REName, TFName): chrN
@@ -1238,9 +1231,8 @@ def cell_type_specific_trans_reg(GRNdir,adata_RNA,celltype,outdir,num_cpu=8):
     if celltype=='all':
         # Process cell types in parallel
         results_list = []
-        max_workers = min(len(labelset), int(num_cpu))
         
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        with ProcessPoolExecutor(max_workers=int(num_cpu)) as executor:
             future_to_celltype = {
                 executor.submit(process_celltype_trans_reg,
                     (GRNdir, adata_RNA, outdir, str(label0))): label0
