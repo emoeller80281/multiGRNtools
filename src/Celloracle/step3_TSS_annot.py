@@ -57,7 +57,9 @@ print(f"Genomes dir            : {genomes_dir}")
 
 ## ── Load peak list ────────────────────────────────────────────
 peaks = pd.read_csv(arg1)
-peaks = peaks.x.values
+print("Peaks CSV head:")
+print(peaks.head())
+peaks = peaks["peak"].values
 print("Peaks loaded:", peaks[:5])
 
 ## ── Load Cicero co-accessibility scores ───────────────────────

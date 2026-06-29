@@ -38,6 +38,7 @@ dependencies:
   - scanpy
   - anndata
   - cython
+  - "setuptools<82"
 
   - pip:
       - celloracle==0.20.0

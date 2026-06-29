@@ -6,8 +6,8 @@
 #SBATCH -p compute
 #SBATCH --nodes=1
 #SBATCH -c 12
-#SBATCH --mem=64G
-#SBATCH --array=0-100%6
+#SBATCH --mem=72G
+#SBATCH --array=0-100%10
 
 set -euo pipefail
 
@@ -15,10 +15,10 @@ source /gpfs/Home/esm5360/miniconda3/etc/profile.d/conda.sh
 
 # ===== SELECTED METHODS =====
 METHOD_LIST=(
-    # "Pando"
-    # "FigR"
-    # "SCENIC_PLUS"
-    # "LINGER"
+    "Pando"
+    "FigR"
+    "SCENIC_PLUS"
+    "LINGER"
     # "DIRECTNET"
     "CellOracle"
 )
@@ -35,12 +35,14 @@ EXPERIMENT_LIST=(
     # "Macrophage|buffer_3|human"
     # "Macrophage|buffer_4|human"
     # "K562|sample_1|human"
-    "mouse_liver|liver_1|mouse"
+    # "mouse_liver|liver_1|mouse"
     # "mouse_liver|liver_3|mouse"
     # "mouse_liver|liver_4|mouse"
     # "mouse_liver|liver_5|mouse"
     # "mouse_liver|liver_6|mouse"
     # "mouse_liver|liver_7|mouse"
+    "mouse_hepatocytes|hepatocytes_1|mouse"
+    "mouse_hepatocytes|hepatocytes_3|mouse"
 )
 
 NUM_EXPERIMENTS=${#EXPERIMENT_LIST[@]}
