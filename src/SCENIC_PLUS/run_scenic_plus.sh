@@ -26,7 +26,15 @@ SCRIPT_DIR="${PROJECT_DIR}/src/SCENIC_PLUS"
 OUTPUT_DIR="${RESULTS_DIR}/SCENIC_PLUS"
 REGION_BED="${OUTPUT_DIR}/consensus_peak_calling/consensus_regions.bed"
 CISTARGET_SCRIPT_DIR="${SCRIPT_DIR}/scenicplus/create_cisTarget_databases"
-TEMP_DIR="${SCENIC_DATA_DIR}/tmp/${CELL_TYPE}_${SAMPLE_NAME}_tmp"
+# Identifies this run uniquely. Anything written outside RESULTS_DIR/LOG_DIR must be keyed
+# on it: run_tools_stability.sh runs many subsamples of one sample concurrently, and
+# run_tools.sh runs several samples of one cell type, so a path keyed on any smaller
+# combination gets silently overwritten by a sibling run. SUBSAMPLE_NUM is set only by the
+# stability runner, so this collapses to CELL_TYPE_SAMPLE_NAME elsewhere.
+RUN_ID="${CELL_TYPE}_${SAMPLE_NAME}${SUBSAMPLE_NUM:+_subsample_${SUBSAMPLE_NUM}}"
+
+# pycisTopic's MALLET wrapper uses fixed corpus.txt/corpus.mallet names inside this dir.
+TEMP_DIR="${SCENIC_DATA_DIR}/tmp/${RUN_ID}_tmp"
 QC_DIR="${OUTPUT_DIR}/qc"
 
 PYCISTOPIC_PROJECT_DIR="${SCRIPT_DIR}/pycisTopic"
@@ -49,7 +57,7 @@ if [ $SPECIES == "human" ]; then
 
     CHROMSIZES="${REFERENCE_GENOME_DIR}/hg38/hg38.chrom.sizes"
     GENOME_FASTA="${REFERENCE_GENOME_DIR}/hg38/hg38.fa"
-    FASTA_FILE="${SCENIC_DATA_DIR}/hg38.${CELL_TYPE}.with_1kb_bg_padding.fa"
+    FASTA_FILE="${SCENIC_DATA_DIR}/hg38.${RUN_ID}.with_1kb_bg_padding.fa"
     MOTIF_ANNOT_FILE="${MOTIF_DATABASE_DIR}/motifs-v10-nr.hgnc-m0.00001-o0.0.tbl"
     CISTARGET_RANKINGS_PRECOMP="hg38_screen_v10_clust.regions_vs_motifs.rankings.feather"
     CISTARGET_SCORES_PRECOMP="hg38_screen_v10_clust.regions_vs_motifs.scores.feather"
@@ -69,7 +77,7 @@ if [ $SPECIES == "mouse" ]; then
 
     CHROMSIZES="${REFERENCE_GENOME_DIR}/mm10/mm10.chrom.sizes"
     GENOME_FASTA="${REFERENCE_GENOME_DIR}/mm10/mm10.fa"
-    FASTA_FILE="${SCENIC_DATA_DIR}/mm10.${CELL_TYPE}.with_1kb_bg_padding.fa"
+    FASTA_FILE="${SCENIC_DATA_DIR}/mm10.${RUN_ID}.with_1kb_bg_padding.fa"
     MOTIF_ANNOT_FILE="${MOTIF_DATABASE_DIR}/motifs-v10-nr.mgi-m0.00001-o0.0.tbl"
     CISTARGET_RANKINGS_PRECOMP="mm10_screen_v10_clust.regions_vs_motifs.rankings.feather"
     CISTARGET_SCORES_PRECOMP="mm10_screen_v10_clust.regions_vs_motifs.scores.feather"
@@ -79,7 +87,7 @@ if [ $SPECIES == "mouse" ]; then
     SCENIC_GENE_ANNOT="${CHROMSIZE_AND_GENOME_ANNOT_DIR}/mm10/genome_annotation.tsv"
 fi
 
-CONFIG_PATH="${SCRIPT_DIR}/scenicplus/scplus_pipeline/Snakemake/config/${CELL_TYPE}_${SAMPLE_NAME}_config.yaml"
+CONFIG_PATH="${SCRIPT_DIR}/scenicplus/scplus_pipeline/Snakemake/config/${RUN_ID}_config.yaml"
 SNAKEFILE="${SCRIPT_DIR}/scenicplus/scplus_pipeline/Snakemake/workflow/Snakefile"
 mkdir -p "$(dirname "$CONFIG_PATH")"
 mkdir -p "$(dirname "$SNAKEFILE")"
@@ -160,7 +168,7 @@ run_bash_step() {
 activate_conda_env() {
     echo ""
     echo "[INFO] Attempting to load the specified Conda module"
-    local env_file="${PROJECT_DIR}/scenicplus_environment.yml"
+    local env_file="${PROJECT_DIR}/tool_environments/scenicplus_environment.yml"
     CONDA_BASE=$(conda info --base)
     if [ -z "$CONDA_BASE" ]; then
         echo ""

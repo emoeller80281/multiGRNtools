@@ -143,10 +143,12 @@ grange.use    <- seqnames(grange.counts) %in% standardChromosomes(grange.counts)
 atac.counts   <- scATAC_data[as.vector(grange.use), ]
 message("ATAC peaks after standard chr filter: ", nrow(atac.counts))
 
+## Pass a Seqinfo rather than the genome name: a name makes Signac fetch
+## chromInfo.txt.gz from UCSC, which the compute nodes cannot reach.
 chrom.assay <- CreateChromatinAssay(
   counts     = atac.counts,
   sep        = sep_to_use,
-  genome     = genome_str,
+  genome     = seqinfo(bsgenome),
   min.cells  = 10,
   annotation = annotations
 )

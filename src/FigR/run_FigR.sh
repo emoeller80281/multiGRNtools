@@ -51,7 +51,10 @@ fi
 BASE_DIR="${PROJECT_DIR}/src/FigR"
 SCRIPT_DIR=$BASE_DIR
 FigR_RESULTS_DIR="${RESULTS_DIR}/${CELL_TYPE}/${SAMPLE_NAME}/FigR"
-LOG_DIR="${PROJECT_DIR}/LOGS/FigR/${CELL_TYPE}/${SAMPLE_NAME}"
+# Honour the LOG_DIR the parent runner exports, so stability runs land in
+# STABILITY_LOGS/.../subsample_N instead of all subsamples sharing one file.
+# Falls back to the standalone default when invoked directly via sbatch.
+LOG_DIR="${LOG_DIR:-${PROJECT_DIR}/LOGS/FigR/${CELL_TYPE}/${SAMPLE_NAME}}"
 
 mkdir -p "$LOG_DIR" "$FigR_RESULTS_DIR"
 

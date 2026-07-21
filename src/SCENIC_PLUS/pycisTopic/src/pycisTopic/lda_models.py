@@ -637,6 +637,19 @@ class LDAMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             .collect()
         )
 
+        # The region indices come from the state file on disk, but the width of
+        # word_topics comes from the in-memory model. Nothing ties the two together, so a
+        # corpus.txt/corpus.mallet clobbered by a concurrent run sharing tmp_dir would
+        # otherwise scatter another run's regions into this matrix.
+        max_region = topic_region_occurrence_df_pl.get_column("region").max()
+        if max_region is not None and max_region >= self.num_terms:
+            raise RuntimeError(
+                f"MALLET state file {self.fstate()} references region index "
+                f"{max_region}, but this model has only {self.num_terms} regions. "
+                f"The corpus in {self.tmp_dir} was almost certainly overwritten by "
+                f"another process using the same tmp_dir."
+            )
+
         # Fill in word topics matrix values.
         word_topics[
             topic_region_occurrence_df_pl.get_column("topic"),

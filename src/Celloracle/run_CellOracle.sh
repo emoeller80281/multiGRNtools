@@ -50,7 +50,10 @@ fi
 BASE_DIR="${PROJECT_DIR}/src/Celloracle"
 SCRIPT_DIR=$BASE_DIR
 CELL_ORACLE_RESULTS_DIR="${RESULTS_DIR}/${CELL_TYPE}/${SAMPLE_NAME}/CellOracle"
-LOG_DIR="${PROJECT_DIR}/LOGS/CellOracle/${CELL_TYPE}/${SAMPLE_NAME}"
+# Honour the LOG_DIR the parent runner exports, so stability runs land in
+# STABILITY_LOGS/.../subsample_N instead of all subsamples sharing one file.
+# Falls back to the standalone default when invoked directly via sbatch.
+LOG_DIR="${LOG_DIR:-${PROJECT_DIR}/LOGS/CellOracle/${CELL_TYPE}/${SAMPLE_NAME}}"
 
 mkdir -p "$LOG_DIR"
 
