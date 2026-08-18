@@ -2,7 +2,7 @@
 
 #SBATCH -p compute
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=32
+#SBATCH --cpus-per-task=12
 #SBATCH --mem=128G
 #SBATCH --time=24:00:00
 
@@ -232,23 +232,23 @@ check_homer() {
 determine_num_cpus() {
     echo ""
     echo "[INFO] Checking the number of CPUs available for parallel processing"
-    if [ -z "${SLURM_CPUS_PER_TASK:-}" ]; then
-        if command -v nproc &> /dev/null; then
-            TOTAL_CPUS=$(nproc --all)
-            case $TOTAL_CPUS in
-                [1-15]) IGNORED_CPUS=1 ;;  # Reserve 1 CPU for <=15 cores
-                [16-31]) IGNORED_CPUS=2 ;; # Reserve 2 CPUs for <=31 cores
-                *) IGNORED_CPUS=4 ;;       # Reserve 4 CPUs for >=32 cores
-            esac
-            NUM_CPU=$((TOTAL_CPUS - IGNORED_CPUS))
-            echo "    - Running locally. Detected $TOTAL_CPUS CPUs, reserving $IGNORED_CPUS for system tasks. Using $NUM_CPU CPUs."
-        else
-            NUM_CPU=1  # Fallback
-            echo "    - Running locally. Unable to detect CPUs, defaulting to $NUM_CPU CPU."
-        fi
+    # The budget comes from src/common/resource_env.sh, which derives it from the runner's
+    # #SBATCH header so that every method is measured on identical resources. This function
+    # used to detect cores itself via `nproc --all`, which reports all 88 physical cores on
+    # these nodes regardless of the allocation.
+    if [ -n "${ALLOC_CPUS:-}" ]; then
+        NUM_CPU="${ALLOC_CPUS}"
+        echo "    - Using the allocated budget: ${NUM_CPU} CPUs."
+    elif [ -n "${SLURM_CPUS_PER_TASK:-}" ]; then
+        NUM_CPU="${SLURM_CPUS_PER_TASK}"
+        echo "    - Running on SLURM without resource_env.sh. Number of CPUs allocated: ${NUM_CPU}"
+    elif command -v nproc &> /dev/null; then
+        # Plain `nproc` honours the cgroup/affinity mask, unlike `nproc --all`.
+        NUM_CPU=$(nproc)
+        echo "    - Running locally. Using $NUM_CPU CPUs."
     else
-        NUM_CPU=${SLURM_CPUS_PER_TASK}
-        echo "    - Running on SLURM. Number of CPUs allocated: ${NUM_CPU}"
+        NUM_CPU=1  # Fallback
+        echo "    - Running locally. Unable to detect CPUs, defaulting to $NUM_CPU CPU."
     fi
 }
 

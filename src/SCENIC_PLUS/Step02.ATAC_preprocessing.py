@@ -160,7 +160,9 @@ mallet_path="/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/SCEN
 models=run_cgs_models_mallet(
     cistopic_obj,
     n_topics=[2, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
-    n_cpu=int(os.environ.get("SLURM_CPUS_PER_TASK", 32)),
+    # ALLOC_CPUS is the shared budget from src/common/resource_env.sh; SLURM_CPUS_PER_TASK is
+    # the fallback for standalone runs. The old default of 32 exceeded the allocation.
+    n_cpu=int(os.environ.get("ALLOC_CPUS", os.environ.get("SLURM_CPUS_PER_TASK", 1))),
     n_iter=150,
     random_state=555,
     alpha=50,

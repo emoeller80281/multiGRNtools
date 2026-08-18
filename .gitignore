@@ -1,4 +1,6 @@
 LOGS/*
+KARAMVEER_LOGS/
+STABILITY_LOGS/
 *.log
 *.err
 *.csv
@@ -7,9 +9,11 @@ LOGS/*
 *.out
 *.pdf
 formatted_GRNs*
+stability_formatted_GRNs*
 src/SCENIC_PLUS/scenicplus/
 .pybiomart.sqlite
 cbust
 scplus_pipeline
 *.pyc
 run_tools_karamveer.sh
+run_tools_stability.sh

@@ -5,7 +5,7 @@
 #SBATCH --time=12:00:00
 #SBATCH -p compute
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=32
+#SBATCH --cpus-per-task=12
 #SBATCH --mem=128G
 
 GENOME="${GENOME:-Human}"
@@ -116,7 +116,9 @@ fi
 # fi
 
 SAMPLE_DIR="$(dirname "$RNA_FILE")"
-NUM_THREADS=$SLURM_CPUS_PER_TASK
+# ALLOC_CPUS is set by src/common/resource_env.sh from the runner's #SBATCH header, so every
+# method gets the identical budget. The fallback keeps this script runnable standalone.
+NUM_THREADS="${ALLOC_CPUS:-${SLURM_CPUS_PER_TASK:-1}}"
 
 echo "========================================"
 echo "  Genome      : $GENOME"

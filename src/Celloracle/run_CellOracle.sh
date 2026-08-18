@@ -3,10 +3,10 @@
 #SBATCH --output=/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/LOGS/CellOracle/CellOracle_%A.txt
 #SBATCH --error=/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/LOGS/CellOracle/CellOracle_%A.err
 #SBATCH --time=08:00:00
-#SBATCH -p memory
+#SBATCH -p compute
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=16
-#SBATCH --mem-per-cpu=16G
+#SBATCH --cpus-per-task=12
+#SBATCH --mem=128G
 
 GENOME="${GENOME:-Human}"    # Default; may be overridden by SPECIES below
 
@@ -136,10 +136,19 @@ echo "  Results dir  : $CELL_ORACLE_RESULTS_DIR"
 echo "========================================"
 SAMPLE="$SAMPLE_NAME"
 
+# ALLOC_CPUS is set by src/common/resource_env.sh from the runner's #SBATCH header, so every
+# method gets the identical budget. The fallback keeps this script runnable standalone.
+# Re-exported because CellOracle's parallelism lives inside step7_final_integration.py rather
+# than in a command-line argument -- that step read a hard-coded n_jobs=4 before this, so
+# CellOracle was benchmarked on 4 cores while every other method used the full allocation.
+NUM_THREADS="${ALLOC_CPUS:-${SLURM_CPUS_PER_TASK:-1}}"
+export ALLOC_CPUS="${NUM_THREADS}"
+
 echo "========================================"
 echo "  Sample       : $SAMPLE"
 echo "  Sample dir   : $SAMPLE_DIR"
 echo "  Node         : $SLURMD_NODENAME"
+echo "  Num threads  : $NUM_THREADS"
 echo "  Start        : $(date)"
 echo "========================================"
 

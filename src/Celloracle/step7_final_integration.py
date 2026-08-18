@@ -94,13 +94,19 @@ k = int(0.025 * n_cell)
 print(f"Cell number : {n_cell}")
 print(f"Auto-selected k : {k}")
 
+# ALLOC_CPUS is the shared budget set by src/common/resource_env.sh from the runner's #SBATCH
+# header. It replaces a hard-coded n_jobs=4, which made CellOracle the only method not using
+# its full allocation and so understated its cost relative to the others.
+n_jobs = int(os.environ.get("ALLOC_CPUS", 4))
+print(f"knn_imputation n_jobs : {n_jobs}")
+
 oracle.knn_imputation(
     n_pca_dims = n_comps,
     k          = k,
     balanced   = True,
     b_sight    = k * 8,
     b_maxl     = k * 4,
-    n_jobs     = 4
+    n_jobs     = n_jobs
 )
 
 ## ── Save & reload oracle ──────────────────────────────────────
