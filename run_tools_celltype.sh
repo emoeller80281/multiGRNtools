@@ -2,12 +2,13 @@
 #SBATCH --job-name="multiGRNtools_celltype"
 #SBATCH --output="LOGS/run_tools/run_tools_%A/job_%a.out"
 #SBATCH --error="LOGS/run_tools/run_tools_%A/job_%a.err"
-#SBATCH --time=48:00:00
+#SBATCH --time=72:00:00
 #SBATCH -p compute
 #SBATCH --nodes=1
 #SBATCH -c 12
 #SBATCH --mem=128G
-#SBATCH --array=0-59%30
+#SBATCH --exclude=psh01com1ochm[01-03]
+#SBATCH --array=0-509%30
 
 set -euo pipefail
 
@@ -27,20 +28,184 @@ METHOD_LIST=(
 # ${RAW_DATA_DIR}/<tissue>/<sample_name>/. Ordered largest cell count first so the longest
 # runs are the first ones the array starts.
 EXPERIMENT_LIST=(
+    # --- already have GRNs in formatted_GRNs_celltype ---
     # mouse liver: 18,960 genes, 147,471 peaks
-    "mouse_liver|liver_sample|Hepatocytes|mouse"   # 15,937 cells
-    "mouse_liver|liver_sample|Endothelial|mouse"   #  1,723 cells
-    "mouse_liver|liver_sample|Fibroblasts|mouse"   #    141 cells
-    "mouse_liver|liver_sample|T cells|mouse"       #    135 cells
+    # "mouse_liver|liver_sample|Hepatocytes|mouse"   # 15,937 cells
+    # "mouse_liver|liver_sample|Endothelial|mouse"   #  1,723 cells
+    # "mouse_liver|liver_sample|Fibroblasts|mouse"   #    141 cells
+    # "mouse_liver|liver_sample|T_cells|mouse"       #    135 cells
     # mESC E7.5_rep1: 18,637 genes, 196,915 peaks
-    "mESC|E7.5_rep1|ExE_endoderm_lineage|mouse"    #  1,411 cells
-    "mESC|E7.5_rep1|ExE_ectoderm|mouse"            #  1,190 cells
-    "mESC|E7.5_rep1|Mesoderm_lineage|mouse"        #  1,084 cells
-    "mESC|E7.5_rep1|Epiblast_lineage|mouse"        #    887 cells
-    "mESC|E7.5_rep1|Neurectoderm|mouse"            #    592 cells
-    "mESC|E7.5_rep1|Mesenchyme|mouse"              #    515 cells
-    "mESC|E7.5_rep1|Surface_ectoderm|mouse"        #    238 cells
-    "mESC|E7.5_rep1|Blood_progenitors|mouse"       #    159 cells
+    # "mESC|E7.5_rep1|ExE_endoderm_lineage|mouse"    #  1,411 cells
+    # "mESC|E7.5_rep1|ExE_ectoderm|mouse"            #  1,190 cells
+    # "mESC|E7.5_rep1|Mesoderm_lineage|mouse"        #  1,084 cells
+    # "mESC|E7.5_rep1|Epiblast_lineage|mouse"        #    887 cells
+    # "mESC|E7.5_rep1|Neurectoderm|mouse"            #    592 cells
+    # "mESC|E7.5_rep1|Mesenchyme|mouse"              #    515 cells
+    # "mESC|E7.5_rep1|Surface_ectoderm|mouse"        #    238 cells
+    # "mESC|E7.5_rep1|Blood_progenitors|mouse"       #    159 cells
+    # --- new ---
+    # GSE140203_shareseq skin_late_anagen: 23,296 genes, 340,432 peaks
+    "GSE140203_shareseq|skin_late_anagen|Basal_keratinocytes|mouse"        # 10,447 cells
+    "GSE140203_shareseq|skin_late_anagen|Hair_follicle_stem_cells|mouse"   #  3,361 cells
+    "GSE140203_shareseq|skin_late_anagen|Hair_matrix_TACs|mouse"           #  2,964 cells
+    "GSE140203_shareseq|skin_late_anagen|Suprabasal_keratinocytes|mouse"   #  2,496 cells
+    "GSE140203_shareseq|skin_late_anagen|Hair_shaft_IRS|mouse"             #  1,242 cells
+    "GSE140203_shareseq|skin_late_anagen|Dermal_fibroblasts|mouse"         #  1,114 cells
+    "GSE140203_shareseq|skin_late_anagen|Skin_endothelial|mouse"           #    755 cells
+    "GSE140203_shareseq|skin_late_anagen|Dermal_papilla_sheath|mouse"      #    499 cells
+    "GSE140203_shareseq|skin_late_anagen|Melanocytes|mouse"                #    121 cells
+    # kidney Ctrl_4weeks_1: 16,621 genes, 136,249 peaks
+    "kidney|Ctrl_4weeks_1|Proximal_tubule|mouse"        #  6,526 cells
+    "kidney|Ctrl_4weeks_1|Thick_ascending_limb|mouse"   #    719 cells
+    "kidney|Ctrl_4weeks_1|Collecting_duct_PC|mouse"     #    679 cells
+    "kidney|Ctrl_4weeks_1|Distal_tubule|mouse"          #    575 cells
+    "kidney|Ctrl_4weeks_1|Endothelial|mouse"            #    319 cells
+    "kidney|Ctrl_4weeks_1|Collecting_duct_IC|mouse"     #    315 cells
+    "kidney|Ctrl_4weeks_1|Fibroblasts|mouse"            #    168 cells
+    "kidney|Ctrl_4weeks_1|B_cells|mouse"                #    101 cells
+    # kidney Ctrl_6months_1: 17,656 genes, 111,774 peaks
+    "kidney|Ctrl_6months_1|Proximal_tubule|mouse"        #  3,086 cells
+    "kidney|Ctrl_6months_1|Collecting_duct_PC|mouse"     #    552 cells
+    "kidney|Ctrl_6months_1|Thick_ascending_limb|mouse"   #    497 cells
+    "kidney|Ctrl_6months_1|Distal_tubule|mouse"          #    357 cells
+    "kidney|Ctrl_6months_1|Collecting_duct_IC|mouse"     #    354 cells
+    "kidney|Ctrl_6months_1|Endothelial|mouse"            #    236 cells
+    "kidney|Ctrl_6months_1|Fibroblasts|mouse"            #    204 cells
+    # "kidney|Ctrl_6months_1|B_cells|mouse"                #     64 cells
+    # kidney Ctrl_4weeks_2: 17,870 genes, 104,314 peaks
+    "kidney|Ctrl_4weeks_2|Proximal_tubule|mouse"        #  2,802 cells
+    "kidney|Ctrl_4weeks_2|Thick_ascending_limb|mouse"   #  1,512 cells
+    "kidney|Ctrl_4weeks_2|Collecting_duct_PC|mouse"     #  1,172 cells
+    "kidney|Ctrl_4weeks_2|Distal_tubule|mouse"          #    975 cells
+    "kidney|Ctrl_4weeks_2|Endothelial|mouse"            #    681 cells
+    "kidney|Ctrl_4weeks_2|Collecting_duct_IC|mouse"     #    537 cells
+    "kidney|Ctrl_4weeks_2|Fibroblasts|mouse"            #    415 cells
+    "kidney|Ctrl_4weeks_2|B_cells|mouse"                #    124 cells
+    # 10x_E18_mouse_brain brain: 17,908 genes, 168,006 peaks
+    "10x_E18_mouse_brain|brain|Excitatory_neurons|mouse"   #  2,467 cells
+    "10x_E18_mouse_brain|brain|Inhibitory_neurons|mouse"   #    570 cells
+    "10x_E18_mouse_brain|brain|Astrocytes|mouse"           #    393 cells
+    "10x_E18_mouse_brain|brain|Neural_progenitors|mouse"   #    125 cells
+    # "10x_E18_mouse_brain|brain|Endothelial|mouse"          #     30 cells
+    # "10x_E18_mouse_brain|brain|OPCs|mouse"                 #     18 cells
+    # mESC E7.5_rep2: 20,105 genes, 195,464 peaks
+    "mESC|E7.5_rep2|ExE_endoderm_lineage|mouse"             #  1,765 cells
+    "mESC|E7.5_rep2|ExE_ectoderm|mouse"                     #  1,758 cells
+    "mESC|E7.5_rep2|Mesoderm_lineage|mouse"                 #  1,331 cells
+    "mESC|E7.5_rep2|Neurectoderm|mouse"                     #    998 cells
+    "mESC|E7.5_rep2|Mesenchyme|mouse"                       #    451 cells
+    "mESC|E7.5_rep2|Epiblast_lineage|mouse"                 #    433 cells
+    "mESC|E7.5_rep2|Surface_ectoderm|mouse"                 #    280 cells
+    "mESC|E7.5_rep2|Haematoendothelial_progenitors|mouse"   #    223 cells
+    "mESC|E7.5_rep2|Blood_progenitors|mouse"                #    208 cells
+    "mESC|E7.5_rep2|Gut|mouse"                              #    180 cells
+    "mESC|E7.5_rep2|Forebrain_Midbrain_Hindbrain|mouse"     #    152 cells
+    "mESC|E7.5_rep2|Definitive_endoderm|mouse"              #    135 cells
+    # "mESC|E7.5_rep2|Intermediate_mesoderm|mouse"            #     82 cells
+    # "mESC|E7.5_rep2|Spinal_cord|mouse"                      #     62 cells
+    # "mESC|E7.5_rep2|NMP|mouse"                              #     38 cells
+    # "mESC|E7.5_rep2|Erythroid|mouse"                        #     35 cells
+    # "mESC|E7.5_rep2|Neural_crest|mouse"                     #     19 cells
+    # "mESC|E7.5_rep2|Notochord|mouse"                        #     19 cells
+    # "mESC|E7.5_rep2|Cardiomyocytes|mouse"                   #     14 cells
+    # "mESC|E7.5_rep2|Endothelium|mouse"                      #      8 cells
+    # "mESC|E7.5_rep2|PGC|mouse"                              #      8 cells
+    # mESC E8.5_rep1: 18,796 genes, 221,080 peaks
+    "mESC|E8.5_rep1|Mesoderm_lineage|mouse"                 #  1,723 cells
+    "mESC|E8.5_rep1|ExE_endoderm_lineage|mouse"             #  1,120 cells
+    "mESC|E8.5_rep1|Forebrain_Midbrain_Hindbrain|mouse"     #    903 cells
+    "mESC|E8.5_rep1|Erythroid|mouse"                        #    729 cells
+    "mESC|E8.5_rep1|NMP|mouse"                              #    579 cells
+    "mESC|E8.5_rep1|Surface_ectoderm|mouse"                 #    578 cells
+    "mESC|E8.5_rep1|Mesenchyme|mouse"                       #    538 cells
+    "mESC|E8.5_rep1|Spinal_cord|mouse"                      #    391 cells
+    "mESC|E8.5_rep1|Gut|mouse"                              #    342 cells
+    "mESC|E8.5_rep1|Cardiomyocytes|mouse"                   #    254 cells
+    "mESC|E8.5_rep1|ExE_ectoderm|mouse"                     #    223 cells
+    "mESC|E8.5_rep1|Endothelium|mouse"                      #    198 cells
+    "mESC|E8.5_rep1|Haematoendothelial_progenitors|mouse"   #    156 cells
+    "mESC|E8.5_rep1|Intermediate_mesoderm|mouse"            #    132 cells
+    "mESC|E8.5_rep1|Neural_crest|mouse"                     #    132 cells
+    # "mESC|E8.5_rep1|Blood_progenitors|mouse"                #     43 cells
+    # "mESC|E8.5_rep1|Definitive_endoderm|mouse"              #     32 cells
+    # "mESC|E8.5_rep1|Neurectoderm|mouse"                     #     14 cells
+    # "mESC|E8.5_rep1|Notochord|mouse"                        #     10 cells
+    # "mESC|E8.5_rep1|Epiblast_lineage|mouse"                 #      9 cells
+    # "mESC|E8.5_rep1|PGC|mouse"                              #      1 cells
+    # GSE140203_shareseq brain: 21,127 genes, 81,820 peaks
+    "GSE140203_shareseq|brain|Excitatory_neurons|mouse"           #  1,283 cells
+    "GSE140203_shareseq|brain|Inhibitory_neurons|mouse"           #    579 cells
+    # "GSE140203_shareseq|brain|Cerebellar_granule_neurons|mouse"   #     81 cells
+    # "GSE140203_shareseq|brain|Oligodendrocytes|mouse"             #     74 cells
+    # "GSE140203_shareseq|brain|Purkinje_cells|mouse"               #     54 cells
+    # "GSE140203_shareseq|brain|Astrocytes|mouse"                   #     37 cells
+    # "GSE140203_shareseq|brain|OPCs|mouse"                         #     31 cells
+    # mESC E8.5_rep2: 20,717 genes, 219,435 peaks
+    "mESC|E8.5_rep2|Mesoderm_lineage|mouse"                 #  1,045 cells
+    "mESC|E8.5_rep2|ExE_endoderm_lineage|mouse"             #    557 cells
+    "mESC|E8.5_rep2|Forebrain_Midbrain_Hindbrain|mouse"     #    550 cells
+    "mESC|E8.5_rep2|Mesenchyme|mouse"                       #    439 cells
+    "mESC|E8.5_rep2|Erythroid|mouse"                        #    400 cells
+    "mESC|E8.5_rep2|Surface_ectoderm|mouse"                 #    397 cells
+    "mESC|E8.5_rep2|NMP|mouse"                              #    319 cells
+    "mESC|E8.5_rep2|Spinal_cord|mouse"                      #    266 cells
+    "mESC|E8.5_rep2|Gut|mouse"                              #    232 cells
+    "mESC|E8.5_rep2|Cardiomyocytes|mouse"                   #    140 cells
+    "mESC|E8.5_rep2|ExE_ectoderm|mouse"                     #    131 cells
+    "mESC|E8.5_rep2|Endothelium|mouse"                      #    116 cells
+    "mESC|E8.5_rep2|Intermediate_mesoderm|mouse"            #    114 cells
+    # "mESC|E8.5_rep2|Haematoendothelial_progenitors|mouse"   #     78 cells
+    # "mESC|E8.5_rep2|Neural_crest|mouse"                     #     73 cells
+    # "mESC|E8.5_rep2|Blood_progenitors|mouse"                #     31 cells
+    # "mESC|E8.5_rep2|Neurectoderm|mouse"                     #     21 cells
+    # "mESC|E8.5_rep2|Definitive_endoderm|mouse"              #     20 cells
+    # "mESC|E8.5_rep2|Epiblast_lineage|mouse"                 #     17 cells
+    # "mESC|E8.5_rep2|Notochord|mouse"                        #     15 cells
+    # "mESC|E8.5_rep2|PGC|mouse"                              #      1 cells
+    # mESC E8.0_rep1: 19,796 genes, 202,670 peaks
+    "mESC|E8.0_rep1|Mesoderm_lineage|mouse"                 #    959 cells
+    "mESC|E8.0_rep1|ExE_endoderm_lineage|mouse"             #    500 cells
+    "mESC|E8.0_rep1|Mesenchyme|mouse"                       #    376 cells
+    "mESC|E8.0_rep1|ExE_ectoderm|mouse"                     #    269 cells
+    "mESC|E8.0_rep1|Forebrain_Midbrain_Hindbrain|mouse"     #    269 cells
+    "mESC|E8.0_rep1|Gut|mouse"                              #    255 cells
+    "mESC|E8.0_rep1|Surface_ectoderm|mouse"                 #    229 cells
+    "mESC|E8.0_rep1|Spinal_cord|mouse"                      #    164 cells
+    "mESC|E8.0_rep1|Blood_progenitors|mouse"                #    158 cells
+    "mESC|E8.0_rep1|Erythroid|mouse"                        #    156 cells
+    "mESC|E8.0_rep1|Epiblast_lineage|mouse"                 #    123 cells
+    "mESC|E8.0_rep1|NMP|mouse"                              #    123 cells
+    "mESC|E8.0_rep1|Intermediate_mesoderm|mouse"            #    110 cells
+    # "mESC|E8.0_rep1|Cardiomyocytes|mouse"                   #     94 cells
+    # "mESC|E8.0_rep1|Neurectoderm|mouse"                     #     92 cells
+    # "mESC|E8.0_rep1|Endothelium|mouse"                      #     78 cells
+    # "mESC|E8.0_rep1|Haematoendothelial_progenitors|mouse"   #     76 cells
+    # "mESC|E8.0_rep1|Neural_crest|mouse"                     #     25 cells
+    # "mESC|E8.0_rep1|Notochord|mouse"                        #     24 cells
+    # "mESC|E8.0_rep1|Definitive_endoderm|mouse"              #     21 cells
+    # "mESC|E8.0_rep1|PGC|mouse"                              #      5 cells
+    # mESC E8.0_rep2: 20,125 genes, 191,651 peaks
+    "mESC|E8.0_rep2|Mesoderm_lineage|mouse"                 #    820 cells
+    "mESC|E8.0_rep2|ExE_endoderm_lineage|mouse"             #    548 cells
+    "mESC|E8.0_rep2|Mesenchyme|mouse"                       #    329 cells
+    "mESC|E8.0_rep2|ExE_ectoderm|mouse"                     #    254 cells
+    "mESC|E8.0_rep2|Surface_ectoderm|mouse"                 #    239 cells
+    "mESC|E8.0_rep2|Gut|mouse"                              #    221 cells
+    "mESC|E8.0_rep2|Forebrain_Midbrain_Hindbrain|mouse"     #    204 cells
+    "mESC|E8.0_rep2|Spinal_cord|mouse"                      #    157 cells
+    "mESC|E8.0_rep2|Erythroid|mouse"                        #    149 cells
+    "mESC|E8.0_rep2|Intermediate_mesoderm|mouse"            #    118 cells
+    "mESC|E8.0_rep2|Blood_progenitors|mouse"                #    107 cells
+    # "mESC|E8.0_rep2|Cardiomyocytes|mouse"                   #     87 cells
+    # "mESC|E8.0_rep2|Neurectoderm|mouse"                     #     82 cells
+    # "mESC|E8.0_rep2|Epiblast_lineage|mouse"                 #     80 cells
+    # "mESC|E8.0_rep2|NMP|mouse"                              #     71 cells
+    # "mESC|E8.0_rep2|Endothelium|mouse"                      #     69 cells
+    # "mESC|E8.0_rep2|Haematoendothelial_progenitors|mouse"   #     52 cells
+    # "mESC|E8.0_rep2|Neural_crest|mouse"                     #     28 cells
+    # "mESC|E8.0_rep2|Notochord|mouse"                        #     23 cells
+    # "mESC|E8.0_rep2|Definitive_endoderm|mouse"              #     15 cells
+    # "mESC|E8.0_rep2|PGC|mouse"                              #      1 cells
 )
 
 NUM_EXPERIMENTS=${#EXPERIMENT_LIST[@]}

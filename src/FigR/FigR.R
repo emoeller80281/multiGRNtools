@@ -156,12 +156,28 @@ seu.multi <- RunTFIDF(seu.multi,      assay = "ATAC")
 seu.multi <- FindTopFeatures(seu.multi, min.cutoff = 1, assay = "ATAC")
 seu.multi <- RunSVD(seu.multi,        assay = "ATAC", n = 50)
 
+## Seurat pre-allocates an n_cells x knn.range neighbour matrix (knn.range
+## defaults to 200) and fills it from Annoy, which returns at most n_cells - 1
+## hits per cell, and sometimes fewer because the search is approximate. Too
+## large a knn.range dies with
+## "number of items to replace is not a multiple of replacement length" or
+## "'i' and 'j' must not contain NA". n_cells - 1 still failed on the real
+## Blood_progenitors data (159 cells), so keep a 10% margin and cap
+## knn.range (and k.nn) to what this cell type can actually supply. Cell types
+## with more than 222 cells keep the Seurat defaults.
+n_cells   <- ncol(seu.multi)
+knn_range <- min(200, floor(0.9 * n_cells))
+knn_k     <- min(30,  knn_range - 1)
+message("WNN neighbours: n_cells = ", n_cells, ", k.nn = ", knn_k,
+        ", knn.range = ", knn_range)
+
 seu.multi <- FindMultiModalNeighbors(
   seu.multi,
   reduction.list       = list("pca", "lsi"),
   dims.list            = list(1:30, 1:30),
   modality.weight.name = "RNA.weight",
-  k.nn                 = 30
+  k.nn                 = knn_k,
+  knn.range            = knn_range
 )
 
 cellKNN.mat <- seu.multi@neighbors$weighted.nn@nn.idx

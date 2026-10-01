@@ -44,13 +44,17 @@ def main():
 
     inferred_grn = pd.read_csv(inferred_grn_file, sep="\t", index_col=0)
 
-    # Melt TFxTG dataframe to have columns "Source", "Target", and "Score"
+    # LINGER writes this matrix as TG x TF (LL_net.py: pd.DataFrame(S, index=TGset, columns=TFset)),
+    # so the row index holds target genes and the columns hold TFs. Melt it to Source (TF),
+    # Target (TG), Score.
+    tg_col = inferred_grn.index.name or 'index'
     df_long = (
-        inferred_grn.reset_index()                  # move TF index into a column
-        .melt(id_vars=inferred_grn.index.name or 'index',
-                var_name='Target',
+        inferred_grn.reset_index()                  # move TG index into a column
+        .melt(id_vars=tg_col,
+                var_name='Source',
                 value_name='Score')
-        .rename(columns={inferred_grn.index.name or 'index': 'Source'})
+        .rename(columns={tg_col: 'Target'})
+        [['Source', 'Target', 'Score']]
     )
 
     output_file_name = f"{output_dir}/linger_{cell_type}_{sample_name}.tsv"

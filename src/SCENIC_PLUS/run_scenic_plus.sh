@@ -717,9 +717,9 @@ cd "${SCRIPT_DIR}/scenicplus/scplus_pipeline/Snakemake"
 /usr/bin/time -v snakemake \
     --nolock \
     --cores ${NUM_CPU} \
-    --snakefile $SNAKEFILE \
+    --snakefile "$SNAKEFILE" \
     --latency-wait 600 \
-    --configfile $CONFIG_PATH \
+    --configfile "$CONFIG_PATH" \
     --rerun-incomplete \
     > "${LOG_DIR}/Step 6: Snakemake.log" 2>&1;
 

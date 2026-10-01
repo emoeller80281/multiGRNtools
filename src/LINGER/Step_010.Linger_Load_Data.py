@@ -110,6 +110,13 @@ atac_barcode_idx = pd.DataFrame(range(adata_ATAC.shape[0]), index=adata_ATAC.obs
 adata_RNA = adata_RNA[rna_barcode_idx.loc[selected_barcode][0]].copy()
 adata_ATAC = adata_ATAC[atac_barcode_idx.loc[selected_barcode][0]].copy()
 
+# Dropping cells can push features back under min_cells=3. pseudo_bulk() re-applies that
+# filter, so re-filter here too or Peaks.txt lists peaks missing from RE_pseudobulk and
+# Step_020 fails with "KeyError: [...] not in index".
+sc.pp.filter_genes(adata_RNA, min_cells=3)
+sc.pp.filter_genes(adata_ATAC, min_cells=3)
+logging.info(f'\tAfter barcode matching: {adata_RNA.shape[1]} genes, {adata_ATAC.shape[1]} peaks, {adata_ATAC.shape[0]} cells')
+
 logging.info(f'\nGenerating pseudo-bulk / metacells')
 samplelist = list(set(adata_ATAC.obs['sample'].values))
 tempsample = samplelist[0]
@@ -148,19 +155,15 @@ def remove_bad_cells_and_values(adata):
 
     return adata
 
-for tempsample in samplelist:
-    adata_RNAtemp = adata_RNA[adata_RNA.obs['sample'] == tempsample].copy()
-    adata_ATACtemp = adata_ATAC[adata_ATAC.obs['sample'] == tempsample].copy()
-    
-    adata_RNAtemp = remove_bad_cells_and_values(adata_RNAtemp)
-    adata_ATACtemp = remove_bad_cells_and_values(adata_ATACtemp)
+adata_RNAtemp = adata_RNA.copy()
+adata_ATACtemp = adata_ATAC.copy()
 
-    TG_pseudobulk_temp, RE_pseudobulk_temp = pseudo_bulk(adata_RNAtemp, adata_ATACtemp, singlepseudobulk)
+adata_RNAtemp = remove_bad_cells_and_values(adata_RNAtemp)
+adata_ATACtemp = remove_bad_cells_and_values(adata_ATACtemp)
 
-    TG_pseudobulk = pd.concat([TG_pseudobulk, TG_pseudobulk_temp], axis=1)
-    RE_pseudobulk = pd.concat([RE_pseudobulk, RE_pseudobulk_temp], axis=1)
+TG_pseudobulk, RE_pseudobulk = pseudo_bulk(adata_RNAtemp, adata_ATACtemp, singlepseudobulk)
 
-    RE_pseudobulk[RE_pseudobulk > 100] = 100
+RE_pseudobulk[RE_pseudobulk > 100] = 100
 
 if not os.path.exists(args.sample_data_dir):
     os.makedirs(args.sample_data_dir)

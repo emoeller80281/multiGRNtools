@@ -2,7 +2,7 @@
 #SBATCH --job-name=CellOracle
 #SBATCH --output=/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/LOGS/CellOracle/CellOracle_%A.txt
 #SBATCH --error=/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/LOGS/CellOracle/CellOracle_%A.err
-#SBATCH --time=08:00:00
+#SBATCH --time=72:00:00
 #SBATCH -p compute
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=12
@@ -24,7 +24,11 @@ fi
 
 ## ── Conda + modules ───────────────────────────────────────────
 source activate celloracle_env
-module load bedtools
+## NOTE: the unversioned "bedtools" module resolves to /swst/apps/bedtools2/2.30.0_gcc-8.5.0,
+## which is built with AVX-512 and dies with SIGILL on the ochm nodes (Xeon E5-2698 v3,
+## no AVX-512). pybedtools then silently marks every BEDTools method as not-implemented.
+## Pin the RISE build, which runs on both node generations.
+module load bedtools/2.31.0
 
 if [[ -z "$CONDA_PREFIX" ]]; then
   echo "ERROR: conda environment activation failed (CONDA_PREFIX is empty)"
@@ -43,6 +47,14 @@ if [[ -f "$CONDA_PREFIX/lib/libstdc++.so.6" ]]; then
   export LD_PRELOAD="$CONDA_PREFIX/lib/libstdc++.so.6${LD_PRELOAD:+:$LD_PRELOAD}"
 else
   echo "ERROR: Expected libstdc++ not found at $CONDA_PREFIX/lib/libstdc++.so.6"
+  exit 1
+fi
+
+## Fail fast if bedtools cannot actually execute on this node. pybedtools only
+## catches CalledProcessError here, so a SIGILL/exec failure is downgraded into
+## "intersectBed does not appear to be installed" three steps later.
+if ! bedtools --version >/dev/null 2>&1; then
+  echo "ERROR: bedtools on PATH ($(command -v bedtools || echo not-found)) is not runnable on $(hostname)"
   exit 1
 fi
 

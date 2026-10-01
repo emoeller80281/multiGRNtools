@@ -15,5 +15,6 @@ src/SCENIC_PLUS/scenicplus/
 cbust
 scplus_pipeline
 *.pyc
+CLAUDE.md
 run_tools_karamveer.sh
 run_tools_stability.sh

@@ -39,6 +39,12 @@ def main():
     inferred_grn_data["Score"] = inferred_grn_data["importance_x_abs_rho"]
 
     subset_inferred_grn = pd.DataFrame(inferred_grn_data[["Source", "Target", "Score"]])
+
+    # The eRegulon metadata has one row per TF-region-gene link, so a TF-gene pair appears once
+    # for every region that connects them. Keep one row per pair with its maximum score.
+    subset_inferred_grn = (
+        subset_inferred_grn.groupby(["Source", "Target"], as_index=False, observed=True)["Score"].max()
+    )
     Path(output_file_path).parent.mkdir(parents=True, exist_ok=True)
 
     subset_inferred_grn.to_csv(output_file_path, sep="\t", header=True, index=False)
