@@ -8,7 +8,7 @@
 #SBATCH -c 12
 #SBATCH --mem=128G
 #SBATCH --exclude=psh01com1ochm[01-03]
-#SBATCH --array=0-509%30
+#SBATCH --array=0-529%30
 
 set -euo pipefail
 
@@ -82,12 +82,12 @@ EXPERIMENT_LIST=(
     "kidney|Ctrl_4weeks_2|Fibroblasts|mouse"            #    415 cells
     "kidney|Ctrl_4weeks_2|B_cells|mouse"                #    124 cells
     # 10x_E18_mouse_brain brain: 17,908 genes, 168,006 peaks
-    "10x_E18_mouse_brain|brain|Excitatory_neurons|mouse"   #  2,467 cells
-    "10x_E18_mouse_brain|brain|Inhibitory_neurons|mouse"   #    570 cells
-    "10x_E18_mouse_brain|brain|Astrocytes|mouse"           #    393 cells
-    "10x_E18_mouse_brain|brain|Neural_progenitors|mouse"   #    125 cells
-    # "10x_E18_mouse_brain|brain|Endothelial|mouse"          #     30 cells
-    # "10x_E18_mouse_brain|brain|OPCs|mouse"                 #     18 cells
+    "10x_E18_mouse_brain|E18_brain|Excitatory_neurons|mouse"   #  2,467 cells
+    "10x_E18_mouse_brain|E18_brain|Inhibitory_neurons|mouse"   #    570 cells
+    "10x_E18_mouse_brain|E18_brain|Astrocytes|mouse"           #    393 cells
+    "10x_E18_mouse_brain|E18_brain|Neural_progenitors|mouse"   #    125 cells
+    # "10x_E18_mouse_brain|E18_brain|Endothelial|mouse"          #     30 cells
+    # "10x_E18_mouse_brain|E18_brain|OPCs|mouse"                 #     
     # mESC E7.5_rep2: 20,105 genes, 195,464 peaks
     "mESC|E7.5_rep2|ExE_endoderm_lineage|mouse"             #  1,765 cells
     "mESC|E7.5_rep2|ExE_ectoderm|mouse"                     #  1,758 cells
@@ -133,13 +133,13 @@ EXPERIMENT_LIST=(
     # "mESC|E8.5_rep1|Epiblast_lineage|mouse"                 #      9 cells
     # "mESC|E8.5_rep1|PGC|mouse"                              #      1 cells
     # GSE140203_shareseq brain: 21,127 genes, 81,820 peaks
-    "GSE140203_shareseq|brain|Excitatory_neurons|mouse"           #  1,283 cells
-    "GSE140203_shareseq|brain|Inhibitory_neurons|mouse"           #    579 cells
-    # "GSE140203_shareseq|brain|Cerebellar_granule_neurons|mouse"   #     81 cells
-    # "GSE140203_shareseq|brain|Oligodendrocytes|mouse"             #     74 cells
-    # "GSE140203_shareseq|brain|Purkinje_cells|mouse"               #     54 cells
-    # "GSE140203_shareseq|brain|Astrocytes|mouse"                   #     37 cells
-    # "GSE140203_shareseq|brain|OPCs|mouse"                         #     31 cells
+    "GSE140203_shareseq|shareseq_brain|Excitatory_neurons|mouse"           #  1,283 cells
+    "GSE140203_shareseq|shareseq_brain|Inhibitory_neurons|mouse"           #    579 cells
+    # "GSE140203_shareseq|shareseq_brain|Cerebellar_granule_neurons|mouse"   #     81 cells
+    # "GSE140203_shareseq|shareseq_brain|Oligodendrocytes|mouse"             #     74 cells
+    # "GSE140203_shareseq|shareseq_brain|Purkinje_cells|mouse"               #     54 cells
+    # "GSE140203_shareseq|shareseq_brain|Astrocytes|mouse"                   #     37 cells
+    # "GSE140203_shareseq|shareseq_brain|OPCs|mouse"                         #     31 cells
     # mESC E8.5_rep2: 20,717 genes, 219,435 peaks
     "mESC|E8.5_rep2|Mesoderm_lineage|mouse"                 #  1,045 cells
     "mESC|E8.5_rep2|ExE_endoderm_lineage|mouse"             #    557 cells
@@ -206,6 +206,11 @@ EXPERIMENT_LIST=(
     # "mESC|E8.0_rep2|Notochord|mouse"                        #     23 cells
     # "mESC|E8.0_rep2|Definitive_endoderm|mouse"              #     15 cells
     # "mESC|E8.0_rep2|PGC|mouse"                              #      1 cells
+    # GSE246464_HSC young_rep1: 16,028 genes, 123,067 peaks
+    "GSE246464_HSC|young_rep1|HSC|mouse"   #  3,658 cells
+    "GSE246464_HSC|young_rep2|HSC|mouse"   #  3,451 cells
+    "GSE246464_HSC|old_rep1|HSC|mouse"     #  1,214 cells
+    "GSE246464_HSC|old_rep2|HSC|mouse"     #  2,782 cells
 )
 
 NUM_EXPERIMENTS=${#EXPERIMENT_LIST[@]}
@@ -239,7 +244,7 @@ echo "SPECIES=${SPECIES}"
 
 # ===== PATH CONFIGURATION =====
 PROJECT_DIR="/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools"
-RAW_DATA_DIR="/gpfs/Labs/Uzun/DATA/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/MUON_FILTERED_COUNT_DATASETS/"
+RAW_DATA_DIR="/gpfs/Labs/Uzun/DATA/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/MUON_FILTERED_COUNT_DATASETS/mm10"
 DATA_DIR="/gpfs/Labs/Uzun/DATA/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/data"
 RESULTS_DIR="/gpfs/Labs/Uzun/RESULTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools"
 REFERENCE_GENOME_DIR="/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.SINGLE_CELL_GRN_INFERENCE.MOELLER/data/genome_data/reference_genome"

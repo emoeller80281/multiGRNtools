@@ -8,7 +8,8 @@ STABILITY_LOGS/
 .Rhistory
 *.out
 *.pdf
-formatted_GRNs*
+*formatted_GRNs*
+formatted_stability_GRNs*
 stability_formatted_GRNs*
 src/SCENIC_PLUS/scenicplus/
 .pybiomart.sqlite
@@ -17,4 +18,3 @@ scplus_pipeline
 *.pyc
 CLAUDE.md
 run_tools_karamveer.sh
-run_tools_stability.sh

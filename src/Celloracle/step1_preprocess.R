@@ -72,7 +72,7 @@ input_cds <- input_cds[keep_peaks, ]
 counts_mat <- SingleCellExperiment::counts(input_cds)
 
 max_count <- 50000
-min_count <- 2000
+min_count <- 500
 
 cell_counts <- Matrix::colSums(counts_mat)
 keep_cells <- cell_counts >= min_count & cell_counts <= max_count

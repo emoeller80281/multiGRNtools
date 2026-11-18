@@ -2,7 +2,7 @@
 #SBATCH --job-name=CellOracle
 #SBATCH --output=/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/LOGS/CellOracle/CellOracle_%A.txt
 #SBATCH --error=/gpfs/Labs/Uzun/SCRIPTS/PROJECTS/2024.GRN_BENCHMARKING.MOELLER/multiGRNtools/LOGS/CellOracle/CellOracle_%A.err
-#SBATCH --time=72:00:00
+#SBATCH --time=24:00:00
 #SBATCH -p compute
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=12
