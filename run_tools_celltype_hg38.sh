@@ -8,7 +8,7 @@
 #SBATCH -c 12
 #SBATCH --mem=128G
 #SBATCH --exclude=psh01com1ochm[01-03]
-#SBATCH --array=0-219%20
+#SBATCH --array=0-194%20
 
 set -euo pipefail
 
@@ -94,64 +94,121 @@ EXPERIMENT_LIST=(
     # "GSE194122_bone_marrow|s1d1|Plasma_cells|human"      #     51 cells
     # "GSE319044_lung_spleen_immune|Spleen-SMO-04|B_cells|human"   #  1,229 cells
     # "GSE319044_lung_spleen_immune|Spleen-SMO-04|T_cells|human"   #    790 cells
-    "ENCODE_adrenal|adrenal_adult_ENCDO856ZOJ|Adrenal_cortex_cells|human"  #  6,341 cells
-    "ENCODE_adrenal|adrenal_adult_ENCDO856ZOJ|Macrophages|human"           #    584 cells
-    "ENCODE_adrenal|adrenal_adult_ENCDO856ZOJ|Fibroblasts|human"           #    348 cells
-    "ENCODE_adrenal|adrenal_adult_ENCDO856ZOJ|Endothelial_cells|human"     #    340 cells
-    "ENCODE_colon|colon_adult_ENCDO186XRB|Colonic_epithelium|human"   #  2,178 cells
-    "ENCODE_colon|colon_adult_ENCDO186XRB|Smooth_muscle_cells|human"  #    233 cells
-    "ENCODE_colon|colon_adult_ENCDO186XRB|Plasma_cells|human"         #    224 cells
-    "ENCODE_colon|colon_adult_ENCDO186XRB|Fibroblasts|human"          #    206 cells
-    "ENCODE_colon|colon_adult_ENCDO186XRB|T_cells|human"              #    161 cells
-    "ENCODE_colon|colon_adult_ENCDO186XRB|Macrophages|human"          #    144 cells
-    "ENCODE_colon|colon_adult_ENCDO186XRB|Endothelial_cells|human"    #    141 cells
-    "ENCODE_fallopian_tube|fallopian_tube_adult_ENCDO856ZOJ|Fallopian_tube_epithelium|human"  #  3,761 cells
-    "ENCODE_fallopian_tube|fallopian_tube_adult_ENCDO856ZOJ|Fibroblasts|human"                #    267 cells
-    "ENCODE_fallopian_tube|fallopian_tube_adult_ENCDO856ZOJ|Endothelial_cells|human"          #    174 cells
-    "ENCODE_fallopian_tube|fallopian_tube_adult_ENCDO856ZOJ|Smooth_muscle_cells|human"        #    163 cells
+    # "ENCODE_adrenal|adrenal_adult_ENCDO856ZOJ|Adrenal_cortex_cells|human"  #  6,341 cells
+    # "ENCODE_adrenal|adrenal_adult_ENCDO856ZOJ|Macrophages|human"           #    584 cells
+    # "ENCODE_adrenal|adrenal_adult_ENCDO856ZOJ|Fibroblasts|human"           #    348 cells
+    # "ENCODE_adrenal|adrenal_adult_ENCDO856ZOJ|Endothelial_cells|human"     #    340 cells
+    # "ENCODE_colon|colon_adult_ENCDO186XRB|Colonic_epithelium|human"   #  2,178 cells
+    # "ENCODE_colon|colon_adult_ENCDO186XRB|Smooth_muscle_cells|human"  #    233 cells
+    # "ENCODE_colon|colon_adult_ENCDO186XRB|Plasma_cells|human"         #    224 cells
+    # "ENCODE_colon|colon_adult_ENCDO186XRB|Fibroblasts|human"          #    206 cells
+    # "ENCODE_colon|colon_adult_ENCDO186XRB|T_cells|human"              #    161 cells
+    # "ENCODE_colon|colon_adult_ENCDO186XRB|Macrophages|human"          #    144 cells
+    # "ENCODE_colon|colon_adult_ENCDO186XRB|Endothelial_cells|human"    #    141 cells
+    # "ENCODE_fallopian_tube|fallopian_tube_adult_ENCDO856ZOJ|Fallopian_tube_epithelium|human"  #  3,761 cells
+    # "ENCODE_fallopian_tube|fallopian_tube_adult_ENCDO856ZOJ|Fibroblasts|human"                #    267 cells
+    # "ENCODE_fallopian_tube|fallopian_tube_adult_ENCDO856ZOJ|Endothelial_cells|human"          #    174 cells
+    # "ENCODE_fallopian_tube|fallopian_tube_adult_ENCDO856ZOJ|Smooth_muscle_cells|human"        #    163 cells
     # "ENCODE_fallopian_tube|fallopian_tube_adult_ENCDO856ZOJ|Macrophages|human"                #     38 cells
     # "ENCODE_fallopian_tube|fallopian_tube_adult_ENCDO856ZOJ|T_cells|human"                    #      9 cells
-    "ENCODE_heart|heart_lv_adult_ENCDO411EVD|Cardiomyocytes|human"       #  5,359 cells
-    "ENCODE_heart|heart_lv_adult_ENCDO411EVD|Fibroblasts|human"          #  2,414 cells
-    "ENCODE_heart|heart_lv_adult_ENCDO411EVD|Macrophages|human"          #  1,512 cells
-    "ENCODE_heart|heart_lv_adult_ENCDO411EVD|Smooth_muscle_cells|human"  #  1,228 cells
-    "ENCODE_heart|heart_lv_adult_ENCDO411EVD|Endothelial_cells|human"    #  1,138 cells
+    # "ENCODE_heart|heart_lv_adult_ENCDO411EVD|Cardiomyocytes|human"       #  5,359 cells
+    # "ENCODE_heart|heart_lv_adult_ENCDO411EVD|Fibroblasts|human"          #  2,414 cells
+    # "ENCODE_heart|heart_lv_adult_ENCDO411EVD|Macrophages|human"          #  1,512 cells
+    # "ENCODE_heart|heart_lv_adult_ENCDO411EVD|Smooth_muscle_cells|human"  #  1,228 cells
+    # "ENCODE_heart|heart_lv_adult_ENCDO411EVD|Endothelial_cells|human"    #  1,138 cells
     # "ENCODE_heart|heart_lv_adult_ENCDO411EVD|T_cells|human"              #     84 cells
-    "ENCODE_lung|lung_child_ENCDO575EGL|Fibroblasts|human"          #    891 cells
-    "ENCODE_lung|lung_child_ENCDO575EGL|Endothelial_cells|human"    #    316 cells
-    "ENCODE_lung|lung_child_ENCDO575EGL|Macrophages|human"          #    222 cells
+    # "ENCODE_lung|lung_child_ENCDO575EGL|Fibroblasts|human"          #    891 cells
+    # "ENCODE_lung|lung_child_ENCDO575EGL|Endothelial_cells|human"    #    316 cells
+    # "ENCODE_lung|lung_child_ENCDO575EGL|Macrophages|human"          #    222 cells
     # "ENCODE_lung|lung_child_ENCDO575EGL|Smooth_muscle_cells|human"  #     99 cells
     # "ENCODE_lung|lung_child_ENCDO575EGL|Plasma_cells|human"         #     36 cells
-    "ENCODE_pancreas|pancreas_child_ENCDO575EGL|Pancreatic_exocrine_cells|human"  #  4,260 cells
-    "ENCODE_pancreas|pancreas_child_ENCDO575EGL|Macrophages|human"                #    583 cells
-    "ENCODE_pancreas|pancreas_child_ENCDO575EGL|Fibroblasts|human"                #    387 cells
-    "ENCODE_pancreas|pancreas_child_ENCDO575EGL|T_cells|human"                    #    100 cells
+    # "ENCODE_pancreas|pancreas_child_ENCDO575EGL|Pancreatic_exocrine_cells|human"  #  4,260 cells
+    # "ENCODE_pancreas|pancreas_child_ENCDO575EGL|Macrophages|human"                #    583 cells
+    # "ENCODE_pancreas|pancreas_child_ENCDO575EGL|Fibroblasts|human"                #    387 cells
+    # "ENCODE_pancreas|pancreas_child_ENCDO575EGL|T_cells|human"                    #    100 cells
     # "ENCODE_pancreas|pancreas_child_ENCDO575EGL|Endothelial_cells|human"          #     66 cells
     # "ENCODE_pancreas|pancreas_child_ENCDO575EGL|Smooth_muscle_cells|human"        #     42 cells
-    "ENCODE_vena_cava|vena_cava_adult_ENCDO221IPH|Fibroblasts|human"          #  1,336 cells
-    "ENCODE_vena_cava|vena_cava_adult_ENCDO221IPH|Smooth_muscle_cells|human"  #  1,295 cells
-    "ENCODE_vena_cava|vena_cava_adult_ENCDO221IPH|Macrophages|human"          #    488 cells
-    "ENCODE_vena_cava|vena_cava_adult_ENCDO221IPH|Endothelial_cells|human"    #    358 cells
-    "ENCODE_vena_cava|vena_cava_adult_ENCDO221IPH|T_cells|human"              #    107 cells
+    # "ENCODE_vena_cava|vena_cava_adult_ENCDO221IPH|Fibroblasts|human"          #  1,336 cells
+    # "ENCODE_vena_cava|vena_cava_adult_ENCDO221IPH|Smooth_muscle_cells|human"  #  1,295 cells
+    # "ENCODE_vena_cava|vena_cava_adult_ENCDO221IPH|Macrophages|human"          #    488 cells
+    # "ENCODE_vena_cava|vena_cava_adult_ENCDO221IPH|Endothelial_cells|human"    #    358 cells
+    # "ENCODE_vena_cava|vena_cava_adult_ENCDO221IPH|T_cells|human"              #    107 cells
     # "ENCODE_vena_cava|vena_cava_adult_ENCDO221IPH|Schwann_cells|human"        #     25 cells
-    "GSE194122_bone_marrow|s1d2|T_cells|human"          #  3,146 cells
-    "GSE194122_bone_marrow|s1d2|NK_cells|human"         #  1,089 cells
-    "GSE194122_bone_marrow|s1d2|Monocytes|human"        #    768 cells
-    "GSE194122_bone_marrow|s1d2|pDCs|human"             #    241 cells
-    "GSE194122_bone_marrow|s1d2|B_cells|human"          #    229 cells
-    "GSE194122_bone_marrow|s1d2|Erythroid_cells|human"  #    149 cells
-    "GSE207335_epidermis|S2|Keratinocytes|human"     #  2,177 cells
+    # "GSE194122_bone_marrow|s1d2|T_cells|human"          #  3,146 cells
+    # "GSE194122_bone_marrow|s1d2|NK_cells|human"         #  1,089 cells
+    # "GSE194122_bone_marrow|s1d2|Monocytes|human"        #    768 cells
+    # "GSE194122_bone_marrow|s1d2|pDCs|human"             #    241 cells
+    # "GSE194122_bone_marrow|s1d2|B_cells|human"          #    229 cells
+    # "GSE194122_bone_marrow|s1d2|Erythroid_cells|human"  #    149 cells
+    # "GSE207335_epidermis|S2|Keratinocytes|human"     #  2,177 cells
     # "GSE207335_epidermis|S2|Langerhans_cells|human"  #     69 cells
-    "GSE240061_muscle_pre_exercise|Ex-1_Pre_tr2|Skeletal_myocytes|human"    #  1,892 cells
-    "GSE240061_muscle_pre_exercise|Ex-1_Pre_tr2|Fibroblasts|human"          #    241 cells
+    # "GSE240061_muscle_pre_exercise|Ex-1_Pre_tr2|Skeletal_myocytes|human"    #  1,892 cells
+    # "GSE240061_muscle_pre_exercise|Ex-1_Pre_tr2|Fibroblasts|human"          #    241 cells
     # "GSE240061_muscle_pre_exercise|Ex-1_Pre_tr2|Endothelial_cells|human"    #     70 cells
     # "GSE240061_muscle_pre_exercise|Ex-1_Pre_tr2|Macrophages|human"          #     64 cells
     # "GSE240061_muscle_pre_exercise|Ex-1_Pre_tr2|Satellite_cells|human"      #     50 cells
     # "GSE240061_muscle_pre_exercise|Ex-1_Pre_tr2|Smooth_muscle_cells|human"  #     21 cells
-    "GSE277326_retina_macula_rpe|Retina_donor2|Rod_photoreceptors|human"   #  2,801 cells
+    # "GSE277326_retina_macula_rpe|Retina_donor2|Rod_photoreceptors|human"   #  2,801 cells
     # "GSE277326_retina_macula_rpe|Retina_donor2|Cone_photoreceptors|human"  #     79 cells
-    "GSE319044_lung_spleen_immune|Spleen-SMO-1|B_cells|human"  #  4,819 cells
-    "GSE319044_lung_spleen_immune|Spleen-SMO-1|T_cells|human"  #    163 cells
+    # "GSE319044_lung_spleen_immune|Spleen-SMO-1|B_cells|human"  #  4,819 cells
+    # "GSE319044_lung_spleen_immune|Spleen-SMO-1|T_cells|human"  #    163 cells
+    "ENCODE_liver|liver_adult_ENCDO757VPQ|Hepatocytes|human"             #  7,988 cells
+    "ENCODE_liver|liver_adult_ENCDO757VPQ|Endothelial_cells|human"       #    889 cells
+    "ENCODE_liver|liver_adult_ENCDO757VPQ|Cholangiocytes|human"          #    448 cells
+    "ENCODE_liver|liver_adult_ENCDO757VPQ|Smooth_muscle_cells|human"     #    382 cells
+    "ENCODE_liver|liver_adult_ENCDO757VPQ|Hepatic_stellate_cells|human"  #    232 cells
+    "ENCODE_liver|liver_adult_ENCDO912EIY|Hepatocytes|human"           #  3,872 cells
+    "ENCODE_liver|liver_adult_ENCDO912EIY|Endothelial_cells|human"     #    474 cells
+    "ENCODE_liver|liver_adult_ENCDO912EIY|Smooth_muscle_cells|human"   #    118 cells
+    # "ENCODE_liver|liver_adult_ENCDO912EIY|Cholangiocytes|human"        #     85 cells
+    "GSE249497_embryonic_orofacial|CS12_01|Neural_progenitors|human"       #  1,011 cells
+    "GSE249497_embryonic_orofacial|CS12_01|Surface_epithelium|human"       #    574 cells
+    "GSE249497_embryonic_orofacial|CS12_01|Cranial_mesenchyme|human"       #    568 cells
+    "GSE249497_embryonic_orofacial|CS12_01|Muscle_progenitors|human"       #    175 cells
+    # "GSE249497_embryonic_orofacial|CS12_01|Neurons|human"                  #     89 cells
+    # "GSE249497_embryonic_orofacial|CS12_01|Neural_crest_and_glia|human"    #     82 cells
+    # "GSE249497_embryonic_orofacial|CS12_01|Cardiomyocytes|human"           #     76 cells
+    # "GSE249497_embryonic_orofacial|CS12_01|Endothelial_cells|human"        #     55 cells
+    # "GSE249497_embryonic_orofacial|CS12_01|Erythroid_cells|human"          #     13 cells
+    # "GSE249497_embryonic_orofacial|CS12_01|Chondrocytes|human"             #      8 cells
+    "GSE249497_embryonic_orofacial|CS13_01|Neural_progenitors|human"       #  1,317 cells
+    "GSE249497_embryonic_orofacial|CS13_01|Cranial_mesenchyme|human"       #  1,164 cells
+    "GSE249497_embryonic_orofacial|CS13_01|Chondrocytes|human"             #    474 cells
+    "GSE249497_embryonic_orofacial|CS13_01|Surface_epithelium|human"       #    253 cells
+    "GSE249497_embryonic_orofacial|CS13_01|Neurons|human"                  #    204 cells
+    "GSE249497_embryonic_orofacial|CS13_01|Endothelial_cells|human"        #    121 cells
+    "GSE249497_embryonic_orofacial|CS13_01|Neural_crest_and_glia|human"    #    102 cells
+    # "GSE249497_embryonic_orofacial|CS13_01|Erythroid_cells|human"          #     37 cells
+    # "GSE249497_embryonic_orofacial|CS13_01|Macrophages|human"              #     18 cells
+    "GSE260926_fetal_femur|E59|Chondrocytes|human"    #  2,832 cells
+    "GSE260926_fetal_femur|E59|Perichondrium|human"   #    411 cells
+    "GSE260926_fetal_femur|E72|Chondrocytes|human"        #  9,367 cells
+    "GSE260926_fetal_femur|E72|Perichondrium|human"       #  2,198 cells
+    "GSE260926_fetal_femur|E72|Fibroblasts|human"         #    656 cells
+    "GSE260926_fetal_femur|E72|Skeletal_myocytes|human"   #    282 cells
+    "GSE260926_fetal_femur|E72|Endothelial_cells|human"   #    173 cells
+    "GSE311423_spleen_T_cells|HDL163|T_cells|human"            #  3,779 cells
+    "GSE311423_spleen_T_cells|HDL163|NK_cells|human"           #    202 cells
+    # "GSE311423_spleen_T_cells|HDL163|Dendritic_cells|human"    #     80 cells
+    # "GSE311423_spleen_T_cells|HDL163|Plasma_cells|human"       #     75 cells
+    "GSE311423_spleen_T_cells|LI004|T_cells|human"             #  5,143 cells
+    # "GSE311423_spleen_T_cells|LI004|NK_cells|human"            #     94 cells
+    # "GSE311423_spleen_T_cells|LI004|Plasma_cells|human"        #     78 cells
+    # "GSE311423_spleen_T_cells|LI004|Dendritic_cells|human"     #     33 cells
+    "Kanemaru_heart|heart_1|Cardiomyocytes|human"   #  1,140 cells
+    "Kanemaru_heart|heart_1|Fibroblasts|human"      #    184 cells
+    # "Kanemaru_heart|heart_1|Macrophages|human"      #     12 cells
+    "Kanemaru_heart|heart_2|Cardiomyocytes|human"        #  1,846 cells
+    "Kanemaru_heart|heart_2|Fibroblasts|human"           #    283 cells
+    "Kanemaru_heart|heart_2|Macrophages|human"           #    277 cells
+    "Kanemaru_heart|heart_2|Endothelial_cells|human"     #    227 cells
+    # "Kanemaru_heart|heart_2|Smooth_muscle_cells|human"   #     66 cells
+    "PBMC_10k_multiome|pbmc_10k|T_cells|human"           #  5,111 cells
+    "PBMC_10k_multiome|pbmc_10k|Monocytes|human"         #  2,260 cells
+    "PBMC_10k_multiome|pbmc_10k|B_cells|human"           #    415 cells
+    "PBMC_10k_multiome|pbmc_10k|NK_cells|human"          #    324 cells
+    # "PBMC_10k_multiome|pbmc_10k|Dendritic_cells|human"   #     84 cells
+    # "PBMC_10k_multiome|pbmc_10k|pDCs|human"              #     36 cells
 )
 
 NUM_EXPERIMENTS=${#EXPERIMENT_LIST[@]}
